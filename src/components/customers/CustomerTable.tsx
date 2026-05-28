@@ -1,0 +1,171 @@
+'use client'
+
+import { useState } from 'react'
+import Link from 'next/link'
+import { MessageCircle, ShieldAlert, Eye, ChevronUp, ChevronDown } from 'lucide-react'
+import { formatCurrency, formatDate, getReminderStatus } from '@/lib/utils'
+import type { Customer } from '@/lib/types'
+import WAModal from './WAModal'
+
+interface CustomerTableProps {
+  customers: Customer[]
+  currentUserId: string
+  currentCabang: string | null
+  isSuperAdmin: boolean
+}
+
+type SortKey = 'nama' | 'tanggal_pembelian' | 'reminder_bulan'
+type SortDir = 'asc' | 'desc'
+
+export default function CustomerTable({
+  customers,
+  currentUserId,
+  currentCabang,
+  isSuperAdmin,
+}: CustomerTableProps) {
+  const [waCustomer, setWaCustomer] = useState<Customer | null>(null)
+  const [sortKey, setSortKey] = useState<SortKey>('tanggal_pembelian')
+  const [sortDir, setSortDir] = useState<SortDir>('asc')
+
+  function handleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortKey(key)
+      setSortDir('asc')
+    }
+  }
+
+  const sorted = [...customers].sort((a, b) => {
+    let cmp = 0
+    if (sortKey === 'nama') cmp = a.nama.localeCompare(b.nama)
+    else if (sortKey === 'tanggal_pembelian') cmp = a.tanggal_pembelian.localeCompare(b.tanggal_pembelian)
+    else if (sortKey === 'reminder_bulan') cmp = a.reminder_bulan - b.reminder_bulan
+    return sortDir === 'asc' ? cmp : -cmp
+  })
+
+  function SortIcon({ col }: { col: SortKey }) {
+    if (sortKey !== col) return <ChevronUp className="w-3.5 h-3.5 text-gray-300" />
+    return sortDir === 'asc'
+      ? <ChevronUp className="w-3.5 h-3.5 text-blue-500" />
+      : <ChevronDown className="w-3.5 h-3.5 text-blue-500" />
+  }
+
+  if (sorted.length === 0) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+        <p className="text-gray-500">Tidak ada data customer ditemukan.</p>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="text-left px-4 py-3 font-semibold text-gray-600">
+                  <button className="flex items-center gap-1" onClick={() => handleSort('nama')}>
+                    Nama Customer <SortIcon col="nama" />
+                  </button>
+                </th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-600">Kendaraan</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-600">Item Aki</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-600">Harga Beli</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-600">
+                  <button className="flex items-center gap-1" onClick={() => handleSort('tanggal_pembelian')}>
+                    Tgl Pembelian <SortIcon col="tanggal_pembelian" />
+                  </button>
+                </th>
+                {isSuperAdmin && (
+                  <th className="text-left px-4 py-3 font-semibold text-gray-600">Cabang</th>
+                )}
+                <th className="text-left px-4 py-3 font-semibold text-gray-600">Status</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-600">Klaim</th>
+                <th className="text-right px-4 py-3 font-semibold text-gray-600">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {sorted.map((customer) => {
+                const reminder = getReminderStatus(customer.tanggal_pembelian, customer.reminder_bulan)
+                return (
+                  <tr key={customer.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3">
+                      <Link href={`/customers/${customer.id}`} className="font-medium text-gray-900 hover:text-blue-600">
+                        {customer.nama}
+                      </Link>
+                      <p className="text-xs text-gray-400 mt-0.5">{customer.nomor_telp}</p>
+                    </td>
+                    <td className="px-4 py-3 text-gray-700">{customer.jenis_mobil}</td>
+                    <td className="px-4 py-3 text-gray-700">{customer.item_dibeli}</td>
+                    <td className="px-4 py-3 text-gray-700">{formatCurrency(customer.harga_beli)}</td>
+                    <td className="px-4 py-3 text-gray-700">{formatDate(customer.tanggal_pembelian)}</td>
+                    {isSuperAdmin && (
+                      <td className="px-4 py-3 text-gray-600 text-xs">
+                        {(customer as any).branches?.nama_cabang || '-'}
+                      </td>
+                    )}
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        reminder.color === 'red' ? 'bg-red-100 text-red-700' :
+                        reminder.color === 'amber' ? 'bg-amber-100 text-amber-700' :
+                        'bg-green-100 text-green-700'
+                      }`}>
+                        {reminder.label}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {customer.pernah_claim ? (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                          Pernah Klaim
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 text-xs">-</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-2">
+                        <Link
+                          href={`/customers/${customer.id}`}
+                          className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                          title="Detail"
+                        >
+                          <Eye size={16} />
+                        </Link>
+                        <button
+                          onClick={() => setWaCustomer(customer)}
+                          className="p-1.5 rounded-lg text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors"
+                          title="Kirim WhatsApp"
+                        >
+                          <MessageCircle size={16} />
+                        </button>
+                        <Link
+                          href={`/claims/new?customerId=${customer.id}`}
+                          className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                          title="Buat Klaim"
+                        >
+                          <ShieldAlert size={16} />
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {waCustomer && (
+        <WAModal
+          customer={waCustomer}
+          onClose={() => setWaCustomer(null)}
+          currentUserId={currentUserId}
+          currentCabang={currentCabang}
+        />
+      )}
+    </>
+  )
+}
