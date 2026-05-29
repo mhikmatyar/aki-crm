@@ -10,20 +10,6 @@ export default async function NewCustomerPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('role, cabang_id')
-    .eq('id', user.id)
-    .single()
-
-  const { data: branches } = await supabase
-    .from('branches')
-    .select('*')
-    .eq('aktif', true)
-    .order('nama_cabang')
-
-  const isSuperAdmin = profile?.role === 'super_admin'
-
   return (
     <div className="max-w-3xl">
       <div className="mb-6">
@@ -39,12 +25,7 @@ export default async function NewCustomerPage() {
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <CustomerForm
-          branches={branches || []}
-          defaultCabangId={isSuperAdmin ? null : profile?.cabang_id}
-          isSuperAdmin={isSuperAdmin}
-          userId={user.id}
-        />
+        <CustomerForm userId={user.id} />
       </div>
     </div>
   )

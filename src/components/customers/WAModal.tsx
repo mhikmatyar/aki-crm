@@ -10,10 +10,9 @@ interface WAModalProps {
   customer: Customer
   onClose: () => void
   currentUserId: string
-  currentCabang: string | null
 }
 
-export default function WAModal({ customer, onClose, currentUserId, currentCabang }: WAModalProps) {
+export default function WAModal({ customer, onClose, currentUserId }: WAModalProps) {
   const durasi = getDurasiSejak(customer.tanggal_pembelian)
   const defaultMessage = buildWAMessage({
     nama: customer.nama,
@@ -40,7 +39,6 @@ export default function WAModal({ customer, onClose, currentUserId, currentCaban
         durasi_saat_kirim: durasi,
         pesan_dikirim: pesan,
         dikirim_oleh: currentUserId,
-        cabang: currentCabang || customer.lokasi_cabang,
         waktu_kirim: new Date().toISOString(),
       })
       const waLink = buildWALink(customer.nomor_telp, pesan)
@@ -71,7 +69,11 @@ export default function WAModal({ customer, onClose, currentUserId, currentCaban
             <p><span className="text-gray-500">Customer:</span> <span className="font-medium">{customer.nama}</span></p>
             <p><span className="text-gray-500">Nomor:</span> <span className="font-medium">{customer.nomor_telp}</span></p>
             <p><span className="text-gray-500">Kendaraan:</span> <span className="font-medium">{customer.jenis_mobil}</span></p>
-            <p><span className="text-gray-500">Beli:</span> <span className="font-medium">{formatDate(customer.tanggal_pembelian)}</span> <span className="text-gray-400">({durasi} bulan lalu)</span></p>
+            <p>
+              <span className="text-gray-500">Beli:</span>{' '}
+              <span className="font-medium">{formatDate(customer.tanggal_pembelian)}</span>{' '}
+              <span className="text-gray-400">({durasi} bulan lalu)</span>
+            </p>
           </div>
 
           <div>

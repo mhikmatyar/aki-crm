@@ -1,10 +1,3 @@
-export interface Branch {
-  id: string
-  nama_cabang: string
-  kota: string
-  aktif: boolean
-}
-
 export interface Customer {
   id: string
   nama: string
@@ -13,13 +6,11 @@ export interface Customer {
   harga_beli: number
   item_dibeli: string
   tanggal_pembelian: string
-  lokasi_cabang: string
   reminder_bulan: number
   pernah_claim: boolean
   created_at: string
   updated_at: string
   created_by: string
-  branches?: Branch
 }
 
 export type KondisiKlaim = 'A' | 'B' | 'C' | 'D'
@@ -57,20 +48,15 @@ export interface WaLog {
   durasi_saat_kirim: number
   pesan_dikirim: string
   dikirim_oleh: string
-  cabang: string
   waktu_kirim: string
-  customers?: Customer
-  branches?: Branch
 }
 
 export interface UserProfile {
   id: string
   email: string
   role: 'super_admin' | 'admin'
-  cabang_id: string | null
   nama: string
   aktif: boolean
-  branches?: Branch
 }
 
 export type ReminderFilter = 'all' | '3' | '6' | '12' | '18' | '24'

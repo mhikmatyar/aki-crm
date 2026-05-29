@@ -35,7 +35,7 @@ export default function Header({ user, onMenuClick }: HeaderProps) {
         <div className="text-right hidden sm:block">
           <p className="text-sm font-medium text-gray-900 leading-none">{user.nama || 'Admin'}</p>
           <p className="text-xs text-gray-400 mt-0.5">
-            {user.role === 'super_admin' ? 'Super Admin' : `Admin · ${user.branches?.nama_cabang || 'Cabang'}`}
+            {user.role === 'super_admin' ? 'Super Admin' : 'Admin'}
           </p>
         </div>
         <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">

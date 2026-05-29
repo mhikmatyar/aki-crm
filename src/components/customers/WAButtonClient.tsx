@@ -8,10 +8,9 @@ import type { Customer } from '@/lib/types'
 interface WAButtonClientProps {
   customer: Customer
   currentUserId: string
-  currentCabang: string | null
 }
 
-export default function WAButtonClient({ customer, currentUserId, currentCabang }: WAButtonClientProps) {
+export default function WAButtonClient({ customer, currentUserId }: WAButtonClientProps) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -28,7 +27,6 @@ export default function WAButtonClient({ customer, currentUserId, currentCabang 
           customer={customer}
           onClose={() => setOpen(false)}
           currentUserId={currentUserId}
-          currentCabang={currentCabang}
         />
       )}
     </>

@@ -1,11 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft, MessageCircle, ShieldAlert, Phone, Car, Calendar, MapPin, Clock } from 'lucide-react'
+import { ChevronLeft, MessageCircle, ShieldAlert, Phone, Car, Calendar, Clock } from 'lucide-react'
 import { formatCurrency, formatDate, formatDateTime, getReminderStatus } from '@/lib/utils'
 import type { KondisiKlaim } from '@/lib/types'
 import { KONDISI_KLAIM_LABELS } from '@/lib/types'
 import WAButtonClient from '@/components/customers/WAButtonClient'
+import DeleteButton from '@/components/ui/DeleteButton'
 
 export default async function CustomerDetailPage({ params }: { params: { id: string } }) {
   const supabase = await createClient()
@@ -13,26 +14,16 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
   const { data: { user } } = await supabase.auth.getUser()
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('role, cabang_id')
+    .select('role')
     .eq('id', user!.id)
     .single()
 
+  const isSuperAdmin = profile?.role === 'super_admin'
+
   const [{ data: customer }, { data: claims }, { data: waLogs }] = await Promise.all([
-    supabase
-      .from('customers')
-      .select('*, branches(nama_cabang, kota)')
-      .eq('id', params.id)
-      .single(),
-    supabase
-      .from('claims')
-      .select('*')
-      .eq('customer_id', params.id)
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('wa_logs')
-      .select('*')
-      .eq('customer_id', params.id)
-      .order('waktu_kirim', { ascending: false }),
+    supabase.from('customers').select('*').eq('id', params.id).single(),
+    supabase.from('claims').select('*').eq('customer_id', params.id).order('created_at', { ascending: false }),
+    supabase.from('wa_logs').select('*').eq('customer_id', params.id).order('waktu_kirim', { ascending: false }),
   ])
 
   if (!customer) notFound()
@@ -53,24 +44,23 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
           <ChevronLeft size={16} />
           Kembali ke Database Customer
         </Link>
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{customer.nama}</h1>
             <p className="text-gray-500 text-sm mt-1">{customer.nomor_telp}</p>
           </div>
-          <div className="flex items-center gap-2">
-            <WAButtonClient
-              customer={customer}
-              currentUserId={user!.id}
-              currentCabang={profile?.cabang_id ?? null}
-            />
+          <div className="flex items-center gap-2 flex-wrap">
+            <WAButtonClient customer={customer} currentUserId={user!.id} />
             <Link
               href={`/claims/new?customerId=${customer.id}`}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 rounded-lg transition-colors"
             >
               <ShieldAlert size={16} />
               Buat Klaim
             </Link>
+            {isSuperAdmin && (
+              <DeleteButton table="customers" id={customer.id} redirectTo="/customers" label="Hapus Customer" />
+            )}
           </div>
         </div>
       </div>
@@ -91,13 +81,6 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
               <div>
                 <p className="text-gray-500">Nomor Telepon</p>
                 <p className="font-medium">{customer.nomor_telp}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <MapPin className="w-4 h-4 text-gray-400 shrink-0" />
-              <div>
-                <p className="text-gray-500">Cabang</p>
-                <p className="font-medium">{(customer as any).branches?.nama_cabang}</p>
               </div>
             </div>
           </div>
@@ -146,10 +129,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
       <div className="bg-white rounded-xl border border-gray-200">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <h2 className="font-semibold text-gray-900">Riwayat Klaim ({claims?.length || 0})</h2>
-          <Link
-            href={`/claims/new?customerId=${customer.id}`}
-            className="text-sm text-blue-600 hover:underline"
-          >
+          <Link href={`/claims/new?customerId=${customer.id}`} className="text-sm text-blue-600 hover:underline">
             + Tambah Klaim
           </Link>
         </div>
@@ -189,15 +169,11 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
           <div className="divide-y divide-gray-50">
             {waLogs.map((log) => (
               <div key={log.id} className="px-6 py-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500 flex items-center gap-2">
-                      <MessageCircle size={12} className="text-green-500" />
-                      {formatDateTime(log.waktu_kirim)}
-                    </p>
-                    <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap line-clamp-2">{log.pesan_dikirim}</p>
-                  </div>
-                </div>
+                <p className="text-xs text-gray-500 flex items-center gap-2">
+                  <MessageCircle size={12} className="text-green-500" />
+                  {formatDateTime(log.waktu_kirim)}
+                </p>
+                <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap line-clamp-2">{log.pesan_dikirim}</p>
               </div>
             ))}
           </div>

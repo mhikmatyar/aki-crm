@@ -97,7 +97,7 @@ export default function LayoutClient({ userProfile, children }: LayoutClientProp
         <div className="px-3 pb-3">
           <p className="text-sm font-medium text-white truncate">{userProfile.nama || 'Admin'}</p>
           <p className="text-xs text-gray-400 truncate">
-            {userProfile.role === 'super_admin' ? 'Super Admin' : `Admin · ${userProfile.branches?.nama_cabang || 'Cabang'}`}
+            {userProfile.role === 'super_admin' ? 'Super Admin' : 'Admin'}
           </p>
         </div>
         <button
@@ -113,12 +113,10 @@ export default function LayoutClient({ userProfile, children }: LayoutClientProp
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Desktop sidebar */}
       <aside className="hidden lg:flex lg:flex-col fixed inset-y-0 left-0 z-50 w-64 bg-gray-900">
         <SidebarContent />
       </aside>
 
-      {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 lg:hidden"
@@ -126,7 +124,6 @@ export default function LayoutClient({ userProfile, children }: LayoutClientProp
         />
       )}
 
-      {/* Mobile sidebar */}
       <aside
         className={cn(
           'fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 transform transition-transform duration-200 lg:hidden',
@@ -142,9 +139,7 @@ export default function LayoutClient({ userProfile, children }: LayoutClientProp
         <SidebarContent />
       </aside>
 
-      {/* Main content */}
       <div className="flex-1 lg:pl-64 flex flex-col min-h-screen">
-        {/* Header */}
         <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 lg:px-6 py-3.5">
           <div className="flex items-center gap-3">
             <button
@@ -160,9 +155,7 @@ export default function LayoutClient({ userProfile, children }: LayoutClientProp
                   {userProfile.nama || 'Admin'}
                 </p>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  {userProfile.role === 'super_admin'
-                    ? 'Super Admin'
-                    : `Admin · ${userProfile.branches?.nama_cabang || 'Cabang'}`}
+                  {userProfile.role === 'super_admin' ? 'Super Admin' : 'Admin'}
                 </p>
               </div>
               <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -174,7 +167,6 @@ export default function LayoutClient({ userProfile, children }: LayoutClientProp
           </div>
         </header>
 
-        {/* Page content */}
         <main className="flex-1 p-4 lg:p-6">
           {children}
         </main>

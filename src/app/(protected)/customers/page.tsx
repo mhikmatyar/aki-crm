@@ -14,18 +14,16 @@ export default async function CustomersPage({ searchParams }: PageProps) {
   const { data: { user } } = await supabase.auth.getUser()
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('role, cabang_id')
+    .select('role')
     .eq('id', user!.id)
     .single()
 
   const isSuperAdmin = profile?.role === 'super_admin'
 
-  let query = supabase
+  const { data: customers } = await supabase
     .from('customers')
-    .select('*, branches(nama_cabang, kota)')
+    .select('*')
     .order('tanggal_pembelian', { ascending: true })
-
-  const { data: customers, error } = await query
 
   let filtered = customers || []
 
@@ -114,7 +112,6 @@ export default async function CustomersPage({ searchParams }: PageProps) {
       <CustomerTable
         customers={filtered}
         currentUserId={user!.id}
-        currentCabang={profile?.cabang_id ?? null}
         isSuperAdmin={isSuperAdmin}
       />
     </div>

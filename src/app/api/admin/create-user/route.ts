@@ -5,7 +5,6 @@ export async function POST(req: Request) {
   try {
     const supabase = await createClient()
 
-    // Verify requesting user is super admin
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -22,15 +21,12 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json()
-    const { nama, email, password, role, cabang_id } = body
+    const { nama, email, password, role } = body
 
     if (!nama || !email || !password || !role) {
       return NextResponse.json({ error: 'Data tidak lengkap.' }, { status: 400 })
     }
 
-    // Create auth user using admin API
-    // Note: In production, use SUPABASE_SERVICE_ROLE_KEY for this
-    // For now we use the regular client which may have limitations
     const { data: newUser, error: authError } = await supabase.auth.admin.createUser({
       email,
       password,
@@ -44,18 +40,15 @@ export async function POST(req: Request) {
       )
     }
 
-    // Create user profile
     const { error: profileError } = await supabase.from('user_profiles').insert({
       id: newUser.user.id,
       email,
       nama,
       role,
-      cabang_id: cabang_id || null,
       aktif: true,
     })
 
     if (profileError) {
-      // Clean up auth user if profile creation failed
       await supabase.auth.admin.deleteUser(newUser.user.id)
       return NextResponse.json({ error: profileError.message }, { status: 400 })
     }

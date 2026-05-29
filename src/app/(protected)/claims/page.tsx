@@ -17,7 +17,7 @@ export default async function ClaimsPage({ searchParams }: PageProps) {
 
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('role, cabang_id')
+    .select('role')
     .eq('id', user.id)
     .single()
 
@@ -25,7 +25,7 @@ export default async function ClaimsPage({ searchParams }: PageProps) {
 
   let query = supabase
     .from('claims')
-    .select('*, customers(*, branches(nama_cabang, kota))')
+    .select('*, customers(*)')
     .order('created_at', { ascending: false })
 
   if (searchParams.status && searchParams.status !== 'all') {
@@ -79,10 +79,7 @@ export default async function ClaimsPage({ searchParams }: PageProps) {
         </div>
       </div>
 
-      <ClaimTable
-        claims={(claims as any) || []}
-        isSuperAdmin={isSuperAdmin}
-      />
+      <ClaimTable claims={(claims as any) || []} isSuperAdmin={isSuperAdmin} />
     </div>
   )
 }

@@ -2,13 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Branch } from '@/lib/types'
 
-interface AddUserFormProps {
-  branches: Branch[]
-}
-
-export default function AddUserForm({ branches }: AddUserFormProps) {
+export default function AddUserForm() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -19,7 +14,6 @@ export default function AddUserForm({ branches }: AddUserFormProps) {
     email: '',
     password: '',
     role: 'admin' as 'admin' | 'super_admin',
-    cabang_id: '',
   })
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
@@ -32,12 +26,6 @@ export default function AddUserForm({ branches }: AddUserFormProps) {
     setError(null)
     setSuccess(null)
 
-    if (form.role === 'admin' && !form.cabang_id) {
-      setError('Admin harus memiliki cabang.')
-      setLoading(false)
-      return
-    }
-
     try {
       const res = await fetch('/api/admin/create-user', {
         method: 'POST',
@@ -47,7 +35,6 @@ export default function AddUserForm({ branches }: AddUserFormProps) {
           email: form.email,
           password: form.password,
           role: form.role,
-          cabang_id: form.role === 'super_admin' ? null : form.cabang_id,
         }),
       })
 
@@ -57,7 +44,7 @@ export default function AddUserForm({ branches }: AddUserFormProps) {
         setError(data.error || 'Gagal membuat user.')
       } else {
         setSuccess(`User ${form.nama} berhasil dibuat.`)
-        setForm({ nama: '', email: '', password: '', role: 'admin', cabang_id: '' })
+        setForm({ nama: '', email: '', password: '', role: 'admin' })
         router.refresh()
       }
     } catch {
@@ -141,32 +128,10 @@ export default function AddUserForm({ branches }: AddUserFormProps) {
           required
           className={fieldClass}
         >
-          <option value="admin">Admin</option>
-          <option value="super_admin">Super Admin</option>
+          <option value="admin">Admin — input & edit</option>
+          <option value="super_admin">Super Admin — input, edit & hapus</option>
         </select>
       </div>
-
-      {form.role === 'admin' && (
-        <div>
-          <label className={labelClass}>
-            Cabang <span className="text-red-500">*</span>
-          </label>
-          <select
-            name="cabang_id"
-            value={form.cabang_id}
-            onChange={handleChange}
-            required
-            className={fieldClass}
-          >
-            <option value="">Pilih cabang...</option>
-            {branches.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.nama_cabang} — {b.kota}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
 
       <button
         type="submit"

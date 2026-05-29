@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import Sidebar from '@/components/layout/Sidebar'
 import LayoutClient from '@/components/layout/LayoutClient'
 
 export default async function ProtectedLayout({
@@ -17,7 +16,7 @@ export default async function ProtectedLayout({
 
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('*, branches(*)')
+    .select('id, email, nama, role, aktif')
     .eq('id', user.id)
     .single()
 
@@ -25,10 +24,8 @@ export default async function ProtectedLayout({
     id: user.id,
     email: user.email || '',
     role: (profile?.role as 'super_admin' | 'admin') || 'admin',
-    cabang_id: profile?.cabang_id || null,
     nama: profile?.nama || '',
     aktif: profile?.aktif ?? true,
-    branches: profile?.branches || undefined,
   }
 
   return (

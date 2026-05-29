@@ -5,6 +5,7 @@ import { ChevronLeft, CheckCircle } from 'lucide-react'
 import { formatDate, formatDateTime } from '@/lib/utils'
 import { KONDISI_KLAIM_LABELS, KondisiKlaim } from '@/lib/types'
 import DoneClaimButton from '@/components/claims/DoneClaimButton'
+import DeleteButton from '@/components/ui/DeleteButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,15 +14,23 @@ export default async function ClaimDetailPage({ params }: { params: { id: string
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  const isSuperAdmin = profile?.role === 'super_admin'
+
   const { data: claim } = await supabase
     .from('claims')
-    .select('*, customers(*, branches(nama_cabang, kota))')
+    .select('*, customers(*)')
     .eq('id', params.id)
     .single()
 
   if (!claim) notFound()
 
-  const customer = (claim as any).customers
+  const customer = claim.customers as any
 
   const kondisiColors: Record<string, string> = {
     A: 'bg-blue-100 text-blue-700',
@@ -40,14 +49,14 @@ export default async function ClaimDetailPage({ params }: { params: { id: string
           <ChevronLeft size={16} />
           Kembali ke Database Klaim
         </Link>
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Detail Klaim</h1>
             <p className="text-gray-500 text-sm mt-1">
               {customer?.nama} — {formatDate(claim.tanggal_klaim)}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {claim.status === 'aktif' && (
               <DoneClaimButton claimId={claim.id} customerId={customer?.id} userId={user.id} />
             )}
@@ -57,11 +66,13 @@ export default async function ClaimDetailPage({ params }: { params: { id: string
                 Selesai
               </span>
             )}
+            {isSuperAdmin && (
+              <DeleteButton table="claims" id={claim.id} redirectTo="/claims" label="Hapus Klaim" />
+            )}
           </div>
         </div>
       </div>
 
-      {/* Status banner */}
       {claim.status === 'done' && (
         <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
           <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
@@ -74,7 +85,6 @@ export default async function ClaimDetailPage({ params }: { params: { id: string
         </div>
       )}
 
-      {/* Customer info */}
       <div className="bg-white rounded-xl border border-gray-200 p-5">
         <h2 className="font-semibold text-gray-900 mb-4">Data Customer</h2>
         <div className="grid grid-cols-2 gap-4 text-sm">
@@ -96,14 +106,9 @@ export default async function ClaimDetailPage({ params }: { params: { id: string
             <p className="text-gray-400 text-xs">Item Aki</p>
             <p className="font-medium text-gray-900">{customer?.item_dibeli}</p>
           </div>
-          <div>
-            <p className="text-gray-400 text-xs">Cabang</p>
-            <p className="font-medium text-gray-900">{customer?.branches?.nama_cabang || '-'}</p>
-          </div>
         </div>
       </div>
 
-      {/* Claim details */}
       <div className="bg-white rounded-xl border border-gray-200 p-5">
         <h2 className="font-semibold text-gray-900 mb-4">Detail Klaim</h2>
         <div className="space-y-4 text-sm">

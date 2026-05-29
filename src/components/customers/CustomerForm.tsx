@@ -3,37 +3,36 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Branch } from '@/lib/types'
 
 interface CustomerFormProps {
-  branches: Branch[]
-  defaultCabangId?: string | null
-  isSuperAdmin: boolean
   userId: string
+  defaultValues?: {
+    nama?: string
+    nomor_telp?: string
+    jenis_mobil?: string
+    harga_beli?: number
+    item_dibeli?: string
+    tanggal_pembelian?: string
+    reminder_bulan?: number
+  }
 }
 
-export default function CustomerForm({
-  branches,
-  defaultCabangId,
-  isSuperAdmin,
-  userId,
-}: CustomerFormProps) {
+export default function CustomerForm({ userId, defaultValues }: CustomerFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const [form, setForm] = useState({
-    nama: '',
-    nomor_telp: '',
-    jenis_mobil: '',
-    harga_beli: '',
-    item_dibeli: '',
-    tanggal_pembelian: '',
-    lokasi_cabang: defaultCabangId || '',
-    reminder_bulan: '6',
+    nama: defaultValues?.nama || '',
+    nomor_telp: defaultValues?.nomor_telp || '',
+    jenis_mobil: defaultValues?.jenis_mobil || '',
+    harga_beli: defaultValues?.harga_beli?.toString() || '',
+    item_dibeli: defaultValues?.item_dibeli || '',
+    tanggal_pembelian: defaultValues?.tanggal_pembelian || '',
+    reminder_bulan: defaultValues?.reminder_bulan?.toString() || '6',
   })
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
@@ -41,12 +40,6 @@ export default function CustomerForm({
     e.preventDefault()
     setLoading(true)
     setError(null)
-
-    if (!form.lokasi_cabang) {
-      setError('Silakan pilih cabang.')
-      setLoading(false)
-      return
-    }
 
     const supabase = createClient()
     const { error: insertError } = await supabase.from('customers').insert({
@@ -56,7 +49,6 @@ export default function CustomerForm({
       harga_beli: parseFloat(form.harga_beli) || 0,
       item_dibeli: form.item_dibeli.trim(),
       tanggal_pembelian: form.tanggal_pembelian,
-      lokasi_cabang: form.lokasi_cabang,
       reminder_bulan: parseInt(form.reminder_bulan, 10),
       created_by: userId,
     })
@@ -71,7 +63,8 @@ export default function CustomerForm({
     router.refresh()
   }
 
-  const fieldClass = 'w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors'
+  const fieldClass =
+    'w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors'
   const labelClass = 'block text-sm font-medium text-gray-700 mb-1.5'
 
   return (
@@ -172,45 +165,6 @@ export default function CustomerForm({
             max={new Date().toISOString().split('T')[0]}
             className={fieldClass}
           />
-        </div>
-
-        <div>
-          <label className={labelClass}>
-            Cabang <span className="text-red-500">*</span>
-          </label>
-          {isSuperAdmin ? (
-            <select
-              name="lokasi_cabang"
-              value={form.lokasi_cabang}
-              onChange={handleChange}
-              required
-              className={fieldClass}
-            >
-              <option value="">Pilih cabang...</option>
-              {branches.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.nama_cabang} — {b.kota}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <select
-              name="lokasi_cabang"
-              value={form.lokasi_cabang}
-              onChange={handleChange}
-              required
-              disabled={!!defaultCabangId}
-              className={fieldClass}
-            >
-              {branches
-                .filter((b) => b.id === defaultCabangId)
-                .map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.nama_cabang} — {b.kota}
-                  </option>
-                ))}
-            </select>
-          )}
         </div>
 
         <div>
