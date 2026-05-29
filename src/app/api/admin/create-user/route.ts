@@ -1,10 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
 export async function POST(req: Request) {
   try {
+    // Verify requesting user is super_admin using regular client
     const supabase = await createClient()
-
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -27,7 +28,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Data tidak lengkap.' }, { status: 400 })
     }
 
-    const { data: newUser, error: authError } = await supabase.auth.admin.createUser({
+    // Use service_role key for admin operations
+    const supabaseAdmin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    )
+
+    const { data: newUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
@@ -40,7 +48,7 @@ export async function POST(req: Request) {
       )
     }
 
-    const { error: profileError } = await supabase.from('user_profiles').insert({
+    const { error: profileError } = await supabaseAdmin.from('user_profiles').insert({
       id: newUser.user.id,
       email,
       nama,
@@ -49,7 +57,7 @@ export async function POST(req: Request) {
     })
 
     if (profileError) {
-      await supabase.auth.admin.deleteUser(newUser.user.id)
+      await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
       return NextResponse.json({ error: profileError.message }, { status: 400 })
     }
 
