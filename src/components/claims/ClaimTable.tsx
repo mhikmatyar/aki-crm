@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { createClient } from '@/lib/supabase/client'
 import { Claim, KONDISI_KLAIM_LABELS } from '@/lib/types'
 import { formatDate } from '@/lib/utils'
+import { customerHref } from '@/lib/customer-code'
 
 interface ClaimTableProps {
   claims: Claim[]
@@ -45,6 +46,7 @@ export default function ClaimTable({ claims, isSuperAdmin }: ClaimTableProps) {
               <th className="text-left px-4 py-3 font-semibold text-gray-600">#</th>
               <th className="text-left px-4 py-3 font-semibold text-gray-600">Customer</th>
               <th className="text-left px-4 py-3 font-semibold text-gray-600">Kendaraan</th>
+              <th className="text-left px-4 py-3 font-semibold text-gray-600">Aki Terpasang</th>
               <th className="text-left px-4 py-3 font-semibold text-gray-600">Posisi Aki</th>
               <th className="text-left px-4 py-3 font-semibold text-gray-600">Kondisi</th>
               <th className="text-left px-4 py-3 font-semibold text-gray-600">Tgl Klaim</th>
@@ -55,19 +57,41 @@ export default function ClaimTable({ claims, isSuperAdmin }: ClaimTableProps) {
           <tbody className="divide-y divide-gray-100">
             {claims.map((claim, idx) => {
               const isDeleting = deletingId === claim.id
+              const customer = claim.customer_profiles || claim.customers
+              const customerLink = claim.customer_profiles
+                ? customerHref(claim.customer_profiles)
+                : `/customers/${claim.customer_id}`
+
               return (
                 <tr key={claim.id} className={`transition-colors ${isDeleting ? 'bg-red-50' : 'hover:bg-gray-50'}`}>
                   <td className="px-4 py-3 text-gray-400">{idx + 1}</td>
                   <td className="px-4 py-3">
                     <Link
-                      href={`/customers/${claim.customer_id}`}
+                      href={customerLink}
                       className="font-medium text-gray-900 hover:text-blue-600 transition-colors"
                     >
-                      {claim.customers?.nama || '-'}
+                      {customer?.nama || '-'}
                     </Link>
-                    <p className="text-xs text-gray-400 mt-0.5">{claim.customers?.nomor_telp || ''}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{customer?.nomor_telp || ''}</p>
                   </td>
-                  <td className="px-4 py-3 text-gray-700">{claim.customers?.jenis_mobil || '-'}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col">
+                      <span className="text-gray-700 font-medium">
+                        {claim.vehicle_purchases?.vehicles?.jenis_mobil || claim.customers?.jenis_mobil || '-'}
+                      </span>
+                      {claim.vehicle_purchases?.vehicles?.plat_nomor && (
+                        <span className="text-xs font-mono font-semibold text-gray-500 bg-gray-100 rounded px-1.5 py-0.5 inline-block self-start mt-0.5">
+                          {claim.vehicle_purchases.vehicles.plat_nomor}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-gray-750 font-semibold">
+                    {claim.vehicle_purchases 
+                      ? `${claim.vehicle_purchases.merek_aki} ${claim.vehicle_purchases.tipe_aki}`
+                      : claim.customers?.item_dibeli || '-'
+                    }
+                  </td>
                   <td className="px-4 py-3 text-gray-700">{claim.posisi_aki}</td>
                   <td className="px-4 py-3">
                     <Badge

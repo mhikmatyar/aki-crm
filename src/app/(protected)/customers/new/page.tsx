@@ -21,7 +21,9 @@ export default async function NewCustomerPage() {
           Kembali ke Database Customer
         </Link>
         <h1 className="text-2xl font-bold text-gray-900">Tambah Customer Baru</h1>
-        <p className="text-gray-500 text-sm mt-1">Isi data pembelian aki customer</p>
+        <p className="text-gray-500 text-sm mt-1">
+          Buat customer, kendaraan pertama, dan pembelian aki pertama dalam satu alur.
+        </p>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 p-6">

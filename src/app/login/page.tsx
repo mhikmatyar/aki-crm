@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { getSupabaseConfig } from '@/lib/supabase/config'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -16,11 +17,32 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
 
+    const { isPlaceholder } = getSupabaseConfig()
+
+    if (isPlaceholder) {
+      setError('Login tidak bisa dipakai karena konfigurasi Supabase belum diisi. Silakan isi NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_ANON_KEY di file .env.local lalu restart aplikasi.')
+      setLoading(false)
+      return
+    }
+
     const supabase = createClient()
     const { error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
-      setError('Email atau password salah. Silakan coba lagi.')
+      const errorMessage = error.message?.toLowerCase() ?? ''
+      const isUnavailable =
+        errorMessage.includes('fetch') ||
+        errorMessage.includes('network') ||
+        errorMessage.includes('timeout') ||
+        errorMessage.includes('econnrefused') ||
+        errorMessage.includes('socket') ||
+        errorMessage.includes('failed to fetch')
+
+      setError(
+        isUnavailable
+          ? 'Login gagal karena Supabase tidak bisa diakses. Jika project Anda sedang paused, aktifkan kembali di dashboard Supabase lalu coba lagi.'
+          : 'Email atau password salah. Silakan coba lagi.'
+      )
       setLoading(false)
     } else {
       router.push('/dashboard')

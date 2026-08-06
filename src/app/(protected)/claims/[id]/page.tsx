@@ -6,6 +6,7 @@ import { formatDate, formatDateTime } from '@/lib/utils'
 import { KONDISI_KLAIM_LABELS, KondisiKlaim } from '@/lib/types'
 import DoneClaimButton from '@/components/claims/DoneClaimButton'
 import DeleteButton from '@/components/ui/DeleteButton'
+import { customerHref } from '@/lib/customer-code'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,13 +25,43 @@ export default async function ClaimDetailPage({ params }: { params: { id: string
 
   const { data: claim } = await supabase
     .from('claims')
-    .select('*, customers(*)')
+    .select('*')
     .eq('id', params.id)
     .single()
 
   if (!claim) notFound()
 
-  const customer = claim.customers as any
+  let customer: any = null
+  let purchase: any = null
+
+  if (claim.customer_profile_id) {
+    const { data } = await supabase
+      .from('customer_profiles')
+      .select('*')
+      .eq('id', claim.customer_profile_id)
+      .single()
+    customer = data
+  } else if (claim.customer_id) {
+    const { data } = await supabase
+      .from('customers')
+      .select('*')
+      .eq('id', claim.customer_id)
+      .single()
+    customer = data
+  }
+
+  if (claim.vehicle_purchase_id) {
+    const { data } = await supabase
+      .from('vehicle_purchases')
+      .select('*, vehicles(*)')
+      .eq('id', claim.vehicle_purchase_id)
+      .single()
+    purchase = data
+  }
+
+  const customerLink = customer?.kode_customer
+    ? customerHref(customer)
+    : `/customers/${customer?.id}`
 
   const kondisiColors: Record<string, string> = {
     A: 'bg-blue-100 text-blue-700',
@@ -58,7 +89,7 @@ export default async function ClaimDetailPage({ params }: { params: { id: string
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             {claim.status === 'aktif' && (
-              <DoneClaimButton claimId={claim.id} customerId={customer?.id} userId={user.id} />
+              <DoneClaimButton claimId={claim.id} userId={user.id} />
             )}
             {claim.status === 'done' && (
               <span className="flex items-center gap-1.5 px-3 py-2 bg-green-50 text-green-700 border border-green-200 rounded-lg text-sm font-medium">
@@ -90,7 +121,7 @@ export default async function ClaimDetailPage({ params }: { params: { id: string
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <p className="text-gray-400 text-xs">Nama</p>
-            <Link href={`/customers/${customer?.id}`} className="font-medium text-blue-600 hover:underline">
+            <Link href={customerLink} className="font-medium text-blue-600 hover:underline">
               {customer?.nama}
             </Link>
           </div>
@@ -100,11 +131,16 @@ export default async function ClaimDetailPage({ params }: { params: { id: string
           </div>
           <div>
             <p className="text-gray-400 text-xs">Kendaraan</p>
-            <p className="font-medium text-gray-900">{customer?.jenis_mobil}</p>
+            <p className="font-medium text-gray-900">
+              {purchase?.vehicles?.jenis_mobil || customer?.jenis_mobil || '-'}
+              {purchase?.vehicles?.plat_nomor && ` - ${purchase.vehicles.plat_nomor}`}
+            </p>
           </div>
           <div>
             <p className="text-gray-400 text-xs">Item Aki</p>
-            <p className="font-medium text-gray-900">{customer?.item_dibeli}</p>
+            <p className="font-medium text-gray-900">
+              {purchase ? `${purchase.merek_aki} ${purchase.tipe_aki}` : customer?.item_dibeli || '-'}
+            </p>
           </div>
         </div>
       </div>

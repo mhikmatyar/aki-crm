@@ -87,14 +87,37 @@ export function getReminderStatus(tanggalPembelian: string, reminderBulan: numbe
   }
 }
 
+export function getWarrantyStatus(
+  tanggalPembelian: string,
+  durasiGaransiBulan: number
+): 'valid' | 'expired' {
+  try {
+    const purchaseDate = parseISO(tanggalPembelian)
+    const warrantyEndDate = addMonths(purchaseDate, durasiGaransiBulan || 0)
+    return isAfter(new Date(), warrantyEndDate) ? 'expired' : 'valid'
+  } catch {
+    return 'expired'
+  }
+}
+
 export function buildWAMessage(params: {
   nama: string
   jenisMobil: string
   tanggalPembelian: string
   durasiSaatKirim: number
   namaToko: string
+  tahap?: number
 }): string {
-  const { nama, jenisMobil, tanggalPembelian, durasiSaatKirim, namaToko } = params
+  const { nama, jenisMobil, tanggalPembelian, durasiSaatKirim, namaToko, tahap = 1 } = params
+  
+  if (tahap === 2) {
+    return `Halo ${nama},
+
+Kami dari ${namaToko} ingin menanyakan kembali perihal pengingat pengecekan aki kendaraan *${jenisMobil}* Anda (pembelian *${formatDate(tanggalPembelian)}* - usia aki *${durasiSaatKirim} bulan*).
+
+Jika Anda memiliki waktu luang, silakan jadwalkan pengecekan gratis ke toko kami agar kondisi aki mobil tetap prima dan memperpanjang umur pakainya. 😊🔋`
+  }
+
   return `Halo ${nama},
 
 Kami dari ${namaToko} ingin mengingatkan bahwa aki kendaraan *${jenisMobil}* Anda yang dibeli pada *${formatDate(tanggalPembelian)}* sudah berjalan selama *${durasiSaatKirim} bulan*.

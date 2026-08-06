@@ -4,34 +4,54 @@ import { useState } from 'react'
 import { X, Send, MessageCircle } from 'lucide-react'
 import { buildWAMessage, buildWALink, getDurasiSejak, formatDate } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
-import type { Customer } from '@/lib/types'
-
 interface WAModalProps {
-  customer: Customer
+  customer: {
+    id: string
+    nama: string
+    nomor_telp: string
+    jenis_mobil: string
+    tanggal_pembelian: string
+  }
+  vehiclePurchaseId?: string
+  milestone?: number
+  tahap?: number
   onClose: () => void
   currentUserId: string
 }
 
-export default function WAModal({ customer, onClose, currentUserId }: WAModalProps) {
-  const durasi = getDurasiSejak(customer.tanggal_pembelian)
+export default function WAModal({ 
+  customer, 
+  vehiclePurchaseId, 
+  milestone, 
+  tahap = 1,
+  onClose, 
+  currentUserId 
+}: WAModalProps) {
+  const durasi = milestone || getDurasiSejak(customer.tanggal_pembelian)
   const defaultMessage = buildWAMessage({
     nama: customer.nama,
     jenisMobil: customer.jenis_mobil,
     tanggalPembelian: customer.tanggal_pembelian,
     durasiSaatKirim: durasi,
     namaToko: 'Toko Aki',
+    tahap,
   })
 
   const [pesan, setPesan] = useState(defaultMessage)
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleSend() {
     setLoading(true)
+    setError(null)
+
     try {
       const supabase = createClient()
-      await supabase.from('wa_logs').insert({
-        customer_id: customer.id,
+
+      const { error: insertError } = await supabase.from('wa_logs').insert({
+        customer_id: null,
+        customer_profile_id: customer.id,
         nama_customer: customer.nama,
         nomor_telp: customer.nomor_telp,
         jenis_mobil: customer.jenis_mobil,
@@ -39,13 +59,21 @@ export default function WAModal({ customer, onClose, currentUserId }: WAModalPro
         durasi_saat_kirim: durasi,
         pesan_dikirim: pesan,
         dikirim_oleh: currentUserId,
+        vehicle_purchase_id: vehiclePurchaseId || null,
         waktu_kirim: new Date().toISOString(),
       })
+
+      if (insertError) {
+        throw insertError
+      }
+
       const waLink = buildWALink(customer.nomor_telp, pesan)
       window.open(waLink, '_blank')
       setSent(true)
-    } catch (err) {
+      window.setTimeout(onClose, 700)
+    } catch (err: any) {
       console.error('Failed to log WA:', err)
+      setError(err?.message || 'Gagal mencatat log WhatsApp.')
     } finally {
       setLoading(false)
     }
@@ -57,7 +85,7 @@ export default function WAModal({ customer, onClose, currentUserId }: WAModalPro
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div className="flex items-center gap-2">
             <MessageCircle className="w-5 h-5 text-green-500" />
-            <h2 className="font-semibold text-gray-900">Kirim WhatsApp</h2>
+            <h2 className="font-semibold text-gray-900">Kirim WhatsApp - Follow-Up {tahap}</h2>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
             <X size={20} />
@@ -91,6 +119,12 @@ export default function WAModal({ customer, onClose, currentUserId }: WAModalPro
           {sent && (
             <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg px-4 py-3">
               Pesan berhasil dikirim dan dicatat ke log.
+            </div>
+          )}
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+              {error}
             </div>
           )}
         </div>

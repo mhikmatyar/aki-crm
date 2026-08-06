@@ -25,7 +25,7 @@ export default async function ClaimsPage({ searchParams }: PageProps) {
 
   let query = supabase
     .from('claims')
-    .select('*, customers(*)')
+    .select('*')
     .order('created_at', { ascending: false })
 
   if (searchParams.status && searchParams.status !== 'all') {
@@ -34,14 +34,69 @@ export default async function ClaimsPage({ searchParams }: PageProps) {
 
   const { data: claims } = await query
 
+  // Manual resolution of related data to bypass PostgREST relationship cache lag
+  let purchasesMap: Record<string, any> = {}
+  let profilesMap: Record<string, any> = {}
+  let oldCustomersMap: Record<string, any> = {}
+
+  const purchaseIds = (claims || [])
+    .map((c: any) => c.vehicle_purchase_id)
+    .filter(Boolean)
+  const profileIds = (claims || [])
+    .map((c: any) => c.customer_profile_id)
+    .filter(Boolean)
+  const oldCustomerIds = (claims || [])
+    .map((c: any) => c.customer_id)
+    .filter(Boolean)
+
+  if (purchaseIds.length > 0) {
+    const { data: purchases } = await supabase
+      .from('vehicle_purchases')
+      .select('*, vehicles(*)')
+      .in('id', purchaseIds)
+    
+    purchases?.forEach((p: any) => {
+      purchasesMap[p.id] = p
+    })
+  }
+
+  if (profileIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from('customer_profiles')
+      .select('*')
+      .in('id', profileIds)
+
+    profiles?.forEach((profile: any) => {
+      profilesMap[profile.id] = profile
+    })
+  }
+
+  if (oldCustomerIds.length > 0) {
+    const { data: oldCustomers } = await supabase
+      .from('customers')
+      .select('*')
+      .in('id', oldCustomerIds)
+
+    oldCustomers?.forEach((customer: any) => {
+      oldCustomersMap[customer.id] = customer
+    })
+  }
+
+  const combinedClaims = (claims || []).map((claim: any) => ({
+    ...claim,
+    customer_profiles: claim.customer_profile_id ? profilesMap[claim.customer_profile_id] : null,
+    customers: claim.customer_id ? oldCustomersMap[claim.customer_id] : null,
+    vehicle_purchases: claim.vehicle_purchase_id ? purchasesMap[claim.vehicle_purchase_id] : null
+  }))
+
   const statuses = [
     { value: 'all', label: 'Semua' },
     { value: 'aktif', label: 'Aktif' },
     { value: 'done', label: 'Selesai' },
   ]
 
-  const activeCount = (claims || []).filter((c) => c.status === 'aktif').length
-  const doneCount = (claims || []).filter((c) => c.status === 'done').length
+  const activeCount = combinedClaims.filter((c) => c.status === 'aktif').length
+  const doneCount = combinedClaims.filter((c) => c.status === 'done').length
 
   return (
     <div className="space-y-5">
@@ -79,7 +134,7 @@ export default async function ClaimsPage({ searchParams }: PageProps) {
         </div>
       </div>
 
-      <ClaimTable claims={(claims as any) || []} isSuperAdmin={isSuperAdmin} />
+      <ClaimTable claims={combinedClaims} isSuperAdmin={isSuperAdmin} />
     </div>
   )
 }

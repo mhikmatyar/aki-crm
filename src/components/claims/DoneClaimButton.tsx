@@ -7,14 +7,14 @@ import { createClient } from '@/lib/supabase/client'
 
 interface DoneClaimButtonProps {
   claimId: string
-  customerId: string
   userId: string
 }
 
-export default function DoneClaimButton({ claimId, customerId, userId }: DoneClaimButtonProps) {
+export default function DoneClaimButton({ claimId, userId }: DoneClaimButtonProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [confirmed, setConfirmed] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleDone() {
     if (!confirmed) {
@@ -23,10 +23,12 @@ export default function DoneClaimButton({ claimId, customerId, userId }: DoneCla
     }
 
     setLoading(true)
+    setError(null)
+
     try {
       const supabase = createClient()
 
-      await supabase
+      const { error: updateError } = await supabase
         .from('claims')
         .update({
           status: 'done',
@@ -35,16 +37,14 @@ export default function DoneClaimButton({ claimId, customerId, userId }: DoneCla
         })
         .eq('id', claimId)
 
-      // The trigger will automatically update pernah_claim on customer
-      // But we update it manually here as a fallback
-      await supabase
-        .from('customers')
-        .update({ pernah_claim: true })
-        .eq('id', customerId)
+      if (updateError) {
+        throw updateError
+      }
 
       router.refresh()
-    } catch (error) {
-      console.error('Failed to complete claim:', error)
+    } catch (err: any) {
+      console.error('Failed to complete claim:', err)
+      setError(err?.message || 'Gagal menyelesaikan klaim.')
     } finally {
       setLoading(false)
       setConfirmed(false)
@@ -68,6 +68,7 @@ export default function DoneClaimButton({ claimId, customerId, userId }: DoneCla
         >
           Batal
         </button>
+        {error && <span className="text-xs text-red-600">{error}</span>}
       </div>
     )
   }
@@ -79,6 +80,7 @@ export default function DoneClaimButton({ claimId, customerId, userId }: DoneCla
     >
       <CheckCircle size={16} />
       Done Claim
+      {error && <span className="text-xs text-red-100">{error}</span>}
     </button>
   )
 }
