@@ -293,7 +293,7 @@ export function WALogsClient({ initialLogs, isSuperAdmin }: WALogsClientProps) {
                 <th className="px-5 py-3">Milestone</th>
                 {isSuperAdmin && <th className="px-5 py-3">Cabang</th>}
                 <th className="px-5 py-3">Respon</th>
-                <th className="px-5 py-3 text-right">Aksi</th>
+                <th className="px-5 py-3 text-right whitespace-nowrap">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 bg-white">
@@ -368,13 +368,13 @@ export function WALogsClient({ initialLogs, isSuperAdmin }: WALogsClientProps) {
                           </Badge>
                         )}
                       </td>
-                      <td className="px-5 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="px-5 py-4 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-2 whitespace-nowrap">
                           {!hasResponded && (
                             <Button
                               size="sm"
                               variant="outline"
-                              className="text-[11px] text-green-700 border-green-300 hover:bg-green-50 h-7"
+                              className="text-[11px] text-green-700 border-green-300 hover:bg-green-50 h-7 min-w-[96px] whitespace-nowrap"
                               disabled={loadingId === log.id}
                               onClick={() => handleMarkResponded(log)}
                             >
