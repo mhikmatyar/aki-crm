@@ -30,11 +30,6 @@ export async function GET(request: Request) {
             catatan_umum,
             is_agen
           )
-        ),
-        branch:branches!vehicle_purchases_lokasi_cabang_fkey (
-          id,
-          nama_cabang,
-          kota
         )
       `)
       .order('tanggal_pembelian', { ascending: false })

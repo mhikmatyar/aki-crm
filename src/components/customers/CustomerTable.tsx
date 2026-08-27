@@ -145,7 +145,7 @@ export default function CustomerTable({ customers, currentUserId, isSuperAdmin }
                         <div className="flex items-center justify-end gap-1">
                           <Link
                             href={`/customers/${customer.id}`}
-                            className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                             title="Detail"
                           >
                             <Eye size={16} />

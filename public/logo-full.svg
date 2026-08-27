@@ -1,0 +1,11 @@
+<svg width="1290" height="600" viewBox="0 0 1290 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Logo P with lightning bolt (Red) -->
+  <path d="M87.5 283.5L150 150H350C380 150 405 165 420 185C435 205 445 230 445 260C445 290 435 315 420 335C405 355 380 370 350 370H240L190 450L140 530H87.5L137.5 450L87.5 283.5Z" fill="#FF0000"/>
+  <path d="M240 240H310C325 240 337.5 247.5 342.5 260C347.5 272.5 347.5 287.5 342.5 300C337.5 312.5 325 320 310 320H240V240Z" fill="white"/>
+  
+  <!-- Text "PUSAT" (Black) -->
+  <text x="450" y="320" font-family="Arial Black, sans-serif" font-weight="900" font-size="120" fill="#000000" letter-spacing="-2">PUSAT</text>
+  
+  <!-- Text "AKI" (Red) -->
+  <text x="1040" y="320" font-family="Arial Black, sans-serif" font-weight="900" font-size="120" fill="#FF0000" letter-spacing="-2">AKI</text>
+</svg>

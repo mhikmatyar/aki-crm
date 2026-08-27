@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import AddUserForm from '@/components/admin/AddUserForm'
+import UserManagementClient from '@/components/admin/UserManagementClient'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,50 +47,7 @@ export default async function AdminUsersPage() {
 
         <div className="lg:col-span-2">
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="text-left px-4 py-3 font-semibold text-gray-600">Nama</th>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-600">Email</th>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-600">Role</th>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-600">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {(users || []).length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="px-4 py-12 text-center text-sm text-gray-400">
-                      Belum ada user
-                    </td>
-                  </tr>
-                ) : (
-                  (users || []).map((u) => (
-                    <tr key={u.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 font-medium text-gray-900">{u.nama}</td>
-                      <td className="px-4 py-3 text-gray-600">{u.email}</td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                          u.role === 'super_admin'
-                            ? 'bg-purple-100 text-purple-700'
-                            : 'bg-blue-100 text-blue-700'
-                        }`}>
-                          {u.role === 'super_admin' ? 'Super Admin' : 'Admin'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                          u.aktif
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-red-100 text-red-700'
-                        }`}>
-                          {u.aktif ? 'Aktif' : 'Nonaktif'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+            <UserManagementClient users={users || []} currentUserId={user.id} />
           </div>
         </div>
       </div>

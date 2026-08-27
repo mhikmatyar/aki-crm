@@ -56,14 +56,7 @@ export async function GET(
     if (vehicleIds.length > 0) {
       const { data: purchasesData, error: purchasesError } = await supabase
         .from('vehicle_purchases')
-        .select(`
-          *,
-          branches:lokasi_cabang (
-            id,
-            nama_cabang,
-            kota
-          )
-        `)
+        .select('*')
         .in('vehicle_id', vehicleIds)
         .order('tanggal_pembelian', { ascending: false })
       

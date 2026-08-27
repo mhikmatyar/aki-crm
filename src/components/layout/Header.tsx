@@ -38,8 +38,8 @@ export default function Header({ user, onMenuClick }: HeaderProps) {
             {user.role === 'super_admin' ? 'Super Admin' : 'Admin'}
           </p>
         </div>
-        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-          <span className="text-blue-600 font-semibold text-xs uppercase">
+        <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+          <span className="text-red-600 font-semibold text-xs uppercase">
             {user.nama?.charAt(0) || user.email?.charAt(0) || 'A'}
           </span>
         </div>

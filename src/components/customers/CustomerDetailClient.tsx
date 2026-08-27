@@ -89,7 +89,7 @@ export function CustomerDetailClient({
       <div className="max-w-6xl mx-auto p-6">
         <div className="text-center py-12">
           <p className="text-red-600">{error || 'Customer tidak ditemukan'}</p>
-          <Link href="/customers" className="text-blue-600 hover:underline mt-4 inline-block">
+          <Link href="/customers" className="text-red-600 hover:underline mt-4 inline-block">
             Kembali ke Database Customer
           </Link>
         </div>
@@ -221,7 +221,7 @@ export function CustomerDetailClient({
                       {latestPurchase ? (
                         <>
                           <p><span className="font-medium text-gray-800">Aki Terpasang:</span> {latestPurchase.merek_aki} {latestPurchase.tipe_aki}</p>
-                          <p><span className="font-medium text-gray-800">Tanggal Beli:</span> {new Date(latestPurchase.tanggal_pembelian).toLocaleDateString('id-ID')} {latestPurchase.branches ? `(${latestPurchase.branches.nama_cabang})` : ''}</p>
+                          <p><span className="font-medium text-gray-800">Tanggal Beli:</span> {new Date(latestPurchase.tanggal_pembelian).toLocaleDateString('id-ID')} {latestPurchase.lokasi_cabang ? `(${latestPurchase.lokasi_cabang})` : ''}</p>
                           <p><span className="font-medium text-gray-800">Tukar Tambah:</span> {latestPurchase.tukar_tambah ? 'Ya' : 'Tidak'}</p>
                         </>
                       ) : (

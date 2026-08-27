@@ -2,12 +2,14 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Eye, EyeOff } from 'lucide-react'
 
 export default function AddUserForm() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
 
   const [form, setForm] = useState({
     nama: '',
@@ -97,6 +99,9 @@ export default function AddUserForm() {
           onChange={handleChange}
           required
           placeholder="admin@tokaki.com"
+          autoComplete="off"
+          data-lpignore="true"
+          data-1p-ignore="true"
           className={fieldClass}
         />
       </div>
@@ -105,16 +110,24 @@ export default function AddUserForm() {
         <label className={labelClass}>
           Password <span className="text-red-500">*</span>
         </label>
-        <input
-          type="password"
-          name="password"
-          value={form.password}
-          onChange={handleChange}
-          required
-          minLength={8}
-          placeholder="Min 8 karakter"
-          className={fieldClass}
-        />
+        <div className="relative">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            name="password"
+            value={form.password}
+            onChange={handleChange}
+            required
+            minLength={8}
+            placeholder="Min 8 karakter"
+            autoComplete="new-password"
+            data-lpignore="true"
+            data-1p-ignore="true"
+            className={`${fieldClass} pr-10`}
+          />
+          <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
+            {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+          </button>
+        </div>
       </div>
 
       <div>

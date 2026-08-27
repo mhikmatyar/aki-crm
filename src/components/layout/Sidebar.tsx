@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -10,8 +11,9 @@ import {
   ShieldAlert,
   MessageSquare,
   UserCog,
-  Zap,
   LogOut,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 
 const navItems = [
@@ -27,11 +29,17 @@ const adminItems = [
 
 interface SidebarProps {
   role?: string
+  userEmail?: string
+  userName?: string
+  isCollapsed?: boolean
+  onToggle?: () => void
 }
 
-export default function Sidebar({ role }: SidebarProps) {
+export default function Sidebar({ role, userEmail, userName, isCollapsed: controlledCollapsed, onToggle }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
+  const [internalCollapsed, setInternalCollapsed] = useState(false)
+  const isCollapsed = controlledCollapsed ?? internalCollapsed
 
   async function handleLogout() {
     const supabase = createClient()
@@ -41,18 +49,38 @@ export default function Sidebar({ role }: SidebarProps) {
   }
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 flex flex-col">
-      <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-700">
-        <div className="flex items-center justify-center w-9 h-9 bg-blue-500 rounded-lg shrink-0">
-          <Zap className="w-5 h-5 text-white" />
-        </div>
-        <div>
-          <p className="text-white font-bold text-sm leading-none">AKI CRM</p>
-          <p className="text-gray-400 text-xs mt-0.5">Toko Aki Management</p>
+    <aside className={cn(
+      'fixed inset-y-0 left-0 z-50 bg-[#1a1f2e] flex flex-col transition-all duration-300',
+      isCollapsed ? 'w-20' : 'w-64'
+    )}>
+      {/* Logo Section */}
+      <div className={cn(
+        'flex flex-col items-center py-4 transition-all duration-300',
+        isCollapsed ? 'px-2' : 'px-4'
+      )}>
+        <div className={cn(
+          'bg-white flex items-center justify-center transition-all duration-300',
+          isCollapsed ? 'w-12 h-12 p-2 rounded-xl mb-3' : 'w-full p-3 rounded-2xl mb-2'
+        )}>
+          <img 
+            src={isCollapsed ? "/logo-login.png" : "/logo-app.png"}
+            alt="Pusat Aki" 
+            className={cn('h-auto object-contain', isCollapsed ? 'w-8' : 'w-full max-h-16')}
+          />
         </div>
       </div>
 
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+      {/* Toggle Button */}
+      <button
+        onClick={() => onToggle ? onToggle() : setInternalCollapsed(!isCollapsed)}
+        aria-label={isCollapsed ? 'Buka menu' : 'Sembunyikan menu'}
+        className="absolute -right-4 top-7 bg-red-600 text-white rounded-full p-2 shadow-lg hover:bg-red-700 transition-colors"
+      >
+        {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+      </button>
+
+      {/* Navigation */}
+      <nav className={cn('flex-1 py-2 space-y-1 overflow-y-auto', isCollapsed ? 'px-2' : 'px-3')}>
         {navItems.map((item) => {
           const Icon = item.icon
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
@@ -61,23 +89,27 @@ export default function Sidebar({ role }: SidebarProps) {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                'flex items-center gap-3 py-3 rounded-xl text-sm font-medium transition-all',
+                isCollapsed ? 'justify-center px-0' : 'px-4',
                 isActive
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-red-600 text-white shadow-lg'
+                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
               )}
+              title={isCollapsed ? item.label : ''}
             >
-              <Icon className="w-4.5 h-4.5 shrink-0" size={18} />
-              {item.label}
+              <Icon className="shrink-0" size={20} />
+              {!isCollapsed && <span>{item.label}</span>}
             </Link>
           )
         })}
 
         {role === 'super_admin' && (
           <>
-            <div className="pt-4 pb-1 px-3">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Admin</p>
-            </div>
+            {!isCollapsed && (
+              <div className="pt-6 pb-2 px-4">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Admin</p>
+              </div>
+            )}
             {adminItems.map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
@@ -86,14 +118,16 @@ export default function Sidebar({ role }: SidebarProps) {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                    'flex items-center gap-3 py-3 rounded-xl text-sm font-medium transition-all',
+                    isCollapsed ? 'justify-center px-0' : 'px-4',
                     isActive
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                      ? 'bg-red-600 text-white shadow-lg'
+                      : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
                   )}
+                  title={isCollapsed ? item.label : ''}
                 >
-                  <Icon className="w-4.5 h-4.5 shrink-0" size={18} />
-                  {item.label}
+                  <Icon className="shrink-0" size={20} />
+                  {!isCollapsed && <span>{item.label}</span>}
                 </Link>
               )
             })}
@@ -101,13 +135,21 @@ export default function Sidebar({ role }: SidebarProps) {
         )}
       </nav>
 
-      <div className="px-3 py-4 border-t border-gray-700">
+      {/* User Info & Logout */}
+      <div className={cn('py-4 border-t border-gray-700/50', isCollapsed ? 'px-2' : 'px-3')}>
+        {!isCollapsed && userName && (
+          <div className="px-4 py-2 mb-2">
+            <p className="text-white text-sm font-medium truncate">{userName}</p>
+            <p className="text-gray-400 text-xs truncate">{role === 'super_admin' ? 'Admin' : 'User'}</p>
+          </div>
+        )}
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
+          className={cn('flex items-center gap-3 w-full py-3 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800/50 hover:text-white transition-all', isCollapsed ? 'justify-center px-0' : 'px-4')}
+          title={isCollapsed ? 'Keluar' : ''}
         >
-          <LogOut size={18} />
-          Keluar
+          <LogOut size={20} className="shrink-0" />
+          {!isCollapsed && <span>Keluar</span>}
         </button>
       </div>
     </aside>

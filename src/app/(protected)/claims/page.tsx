@@ -124,8 +124,8 @@ export default async function ClaimsPage({ searchParams }: PageProps) {
               href={`/claims?status=${s.value}`}
               className={`px-3 py-1.5 text-sm rounded-lg border font-medium transition-colors ${
                 (searchParams.status || 'all') === s.value
-                  ? 'bg-blue-600 border-blue-600 text-white'
-                  : 'border-gray-300 text-gray-600 hover:border-blue-400 hover:text-blue-600'
+                  ? 'bg-red-600 border-red-600 text-white'
+                  : 'border-gray-300 text-gray-600 hover:border-red-400 hover:text-red-600'
               }`}
             >
               {s.label}

@@ -15,11 +15,7 @@ interface Purchase {
   durasi_garansi_bulan: number
   status_garansi: string
   tukar_tambah: boolean
-  branches?: {
-    id: string
-    nama_cabang: string
-    kota: string
-  } | null
+  lokasi_cabang?: string | null
 }
 
 interface CustomerProfile {
@@ -134,7 +130,7 @@ export default function CustomerProfileList({ customers }: CustomerProfileListPr
                   <td className="px-4 py-3">
                     <Link
                       href={href}
-                      className="font-medium text-gray-900 hover:text-blue-600 flex items-center gap-2"
+                      className="font-medium text-gray-900 hover:text-red-600 flex items-center gap-2"
                     >
                       {customer.nama}
                       {customer.kode_customer && (
@@ -186,9 +182,9 @@ export default function CustomerProfileList({ customers }: CustomerProfileListPr
                           <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4">
                             {latestPurchase.tukar_tambah ? 'Tukar Tambah' : 'Non-TT'}
                           </Badge>
-                          {latestPurchase.branches && (
+                          {latestPurchase.lokasi_cabang && (
                             <span className="text-[10px] text-gray-500 bg-gray-100 rounded px-1.5 py-0.5">
-                              📍 {latestPurchase.branches.nama_cabang}
+                              📍 {latestPurchase.lokasi_cabang}
                             </span>
                           )}
                         </div>
@@ -241,7 +237,7 @@ export default function CustomerProfileList({ customers }: CustomerProfileListPr
                     <div className="flex items-center justify-end gap-1">
                       <Link
                         href={href}
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                         title="Lihat Detail"
                       >
                         <Eye size={16} />

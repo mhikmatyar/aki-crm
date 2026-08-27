@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import type { VehiclePurchase, VehiclePurchaseFormData } from '@/lib/types'
@@ -19,7 +18,6 @@ interface PurchaseFormProps {
 export function PurchaseForm({ vehicleId, purchase, onSubmit, onCancel }: PurchaseFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [branches, setBranches] = useState<any[]>([])
   
   const [formData, setFormData] = useState<VehiclePurchaseFormData>({
     vehicle_id: vehicleId,
@@ -33,14 +31,6 @@ export function PurchaseForm({ vehicleId, purchase, onSubmit, onCancel }: Purcha
     catatan_transaksi: purchase?.catatan_transaksi || '',
     reminder_bulan: purchase?.reminder_bulan || 12,
   })
-
-  useEffect(() => {
-    // Fetch branches for dropdown
-    fetch('/api/admin/branches')
-      .then(res => res.json())
-      .then(data => setBranches(data || []))
-      .catch(err => console.error('Failed to load branches:', err))
-  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -141,18 +131,14 @@ export function PurchaseForm({ vehicleId, purchase, onSubmit, onCancel }: Purcha
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="lokasi_cabang">Lokasi Cabang</Label>
-          <Select
+          <Input
+            id="lokasi_cabang"
+            type="text"
+            placeholder="Contoh: Cabang Bogor - Bogor"
             value={formData.lokasi_cabang || ''}
             onChange={(event) => setFormData({ ...formData, lokasi_cabang: event.target.value || undefined })}
             disabled={isSubmitting}
-          >
-            <option value="">Tidak dipilih</option>
-            {branches.map((branch) => (
-              <option key={branch.id} value={branch.id}>
-                {branch.nama_cabang} - {branch.kota}
-              </option>
-            ))}
-          </Select>
+          />
         </div>
 
         <div className="space-y-2">

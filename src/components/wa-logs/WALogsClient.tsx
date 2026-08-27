@@ -173,10 +173,10 @@ export function WALogsClient({ initialLogs, isSuperAdmin }: WALogsClientProps) {
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="text-xs text-gray-500 font-medium">Total Terkirim</p>
-              <p className="text-2xl font-bold text-blue-600 mt-1">{stats.total}</p>
+              <p className="text-2xl font-bold text-red-600 mt-1">{stats.total}</p>
             </div>
-            <div className="bg-blue-50 p-2.5 rounded-lg">
-              <MessageCircle className="w-5 h-5 text-blue-500" />
+            <div className="bg-red-50 p-2.5 rounded-lg">
+              <MessageCircle className="w-5 h-5 text-red-500" />
             </div>
           </CardContent>
         </Card>
@@ -341,7 +341,7 @@ export function WALogsClient({ initialLogs, isSuperAdmin }: WALogsClientProps) {
                               ? 'bg-purple-100 text-purple-700 hover:bg-purple-100 text-xs'
                               : log.durasi_saat_kirim === 24
                               ? 'bg-red-100 text-red-700 hover:bg-red-100 text-xs'
-                              : 'bg-blue-100 text-blue-700 hover:bg-blue-100 text-xs'
+                              : 'bg-red-100 text-red-700 hover:bg-red-100 text-xs'
                           }
                         >
                           {log.durasi_saat_kirim} Bulan

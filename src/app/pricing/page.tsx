@@ -164,10 +164,12 @@ export default function PricingPage() {
       <nav className="border-b border-gray-100 bg-white/80 backdrop-blur sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Zap className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-gray-900 text-lg">AKI CRM</span>
+            <img 
+              src="/logo-app.png" 
+              alt="Pusat Aki" 
+              className="h-8 w-auto"
+            />
+            <span className="font-bold text-gray-900 text-lg">PUSAT AKI CRM</span>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/login" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
@@ -175,7 +177,7 @@ export default function PricingPage() {
             </Link>
             <Link
               href="/login"
-              className="text-sm bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              className="text-sm bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium"
             >
               Mulai Gratis
             </Link>
@@ -185,12 +187,12 @@ export default function PricingPage() {
 
       {/* HERO */}
       <section className="pt-20 pb-12 text-center px-4">
-        <span className="inline-block text-xs font-semibold bg-blue-50 text-blue-600 px-3 py-1 rounded-full mb-4 uppercase tracking-wide">
+        <span className="inline-block text-xs font-semibold bg-red-50 text-red-600 px-3 py-1 rounded-full mb-4 uppercase tracking-wide">
           Harga Transparan, Tanpa Biaya Tersembunyi
         </span>
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
           Pilih Paket yang <br className="hidden md:block" />
-          <span className="text-blue-600">Sesuai Toko Anda</span>
+          <span className="text-red-600">Sesuai Toko Anda</span>
         </h1>
         <p className="text-lg text-gray-500 max-w-xl mx-auto">
           Dari toko aki satu cabang hingga jaringan besar, AKI CRM siap membantu kelola customer dan klaim aki Anda.
@@ -209,13 +211,13 @@ export default function PricingPage() {
                 key={plan.id}
                 className={`relative rounded-2xl border-2 p-8 flex flex-col ${
                   isPopular
-                    ? 'border-blue-600 shadow-xl shadow-blue-100'
+                    ? 'border-red-600 shadow-xl shadow-red-100'
                     : 'border-gray-200 shadow-sm'
                 }`}
               >
                 {isPopular && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <span className="bg-blue-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow">
+                    <span className="bg-red-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow">
                       PALING POPULER
                     </span>
                   </div>
@@ -226,7 +228,7 @@ export default function PricingPage() {
                     plan.id === 'starter'
                       ? 'bg-gray-100'
                       : plan.id === 'pro'
-                      ? 'bg-blue-50'
+                      ? 'bg-red-50'
                       : 'bg-amber-50'
                   }`}
                 >
@@ -235,7 +237,7 @@ export default function PricingPage() {
                       plan.id === 'starter'
                         ? 'text-gray-500'
                         : plan.id === 'pro'
-                        ? 'text-blue-600'
+                        ? 'text-red-600'
                         : 'text-amber-500'
                     }`}
                   />
@@ -263,7 +265,7 @@ export default function PricingPage() {
                   href={plan.ctaHref}
                   className={`w-full text-center py-3 rounded-xl font-semibold text-sm transition-colors mb-8 block ${
                     plan.ctaStyle === 'solid'
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      ? 'bg-red-600 text-white hover:bg-red-700'
                       : plan.ctaStyle === 'amber'
                       ? 'bg-amber-500 text-white hover:bg-amber-600'
                       : 'border-2 border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50'
@@ -313,7 +315,7 @@ export default function PricingPage() {
                 <tr className="border-b border-gray-200">
                   <th className="text-left px-6 py-4 text-gray-500 font-medium w-1/2">Fitur</th>
                   <th className="text-center px-4 py-4 text-gray-900 font-bold">Starter</th>
-                  <th className="text-center px-4 py-4 text-blue-600 font-bold bg-blue-50">Pro</th>
+                  <th className="text-center px-4 py-4 text-red-600 font-bold bg-red-50">Pro</th>
                   <th className="text-center px-4 py-4 text-amber-600 font-bold">Enterprise</th>
                 </tr>
               </thead>
@@ -348,7 +350,7 @@ export default function PricingPage() {
                         <span className="text-gray-600 font-medium">{row.starter}</span>
                       )}
                     </td>
-                    <td className="px-4 py-3.5 text-center bg-blue-50/40">
+                    <td className="px-4 py-3.5 text-center bg-red-50/40">
                       {typeof row.pro === 'boolean' ? (
                         row.pro ? (
                           <CheckCircle2 className="w-4 h-4 text-green-500 mx-auto" />
@@ -391,8 +393,8 @@ export default function PricingPage() {
             const Icon = h.icon
             return (
               <div key={i} className="text-center">
-                <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Icon className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Icon className="w-6 h-6 text-red-600" />
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2 text-sm">{h.title}</h3>
                 <p className="text-gray-500 text-xs leading-relaxed">{h.desc}</p>
@@ -434,7 +436,7 @@ export default function PricingPage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/login"
-              className="bg-blue-600 text-white px-8 py-3.5 rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+              className="bg-red-600 text-white px-8 py-3.5 rounded-xl font-semibold hover:bg-red-700 transition-colors"
             >
               Mulai Gratis Sekarang
             </Link>

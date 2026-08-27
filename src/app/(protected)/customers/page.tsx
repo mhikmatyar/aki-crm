@@ -53,14 +53,7 @@ export default async function CustomersPage({ searchParams }: PageProps) {
       *,
       vehicles (
         *,
-        vehicle_purchases (
-          *,
-          branches:lokasi_cabang (
-            id,
-            nama_cabang,
-            kota
-          )
-        )
+        vehicle_purchases (*)
       )
     `)
     .order('created_at', { ascending: false })
@@ -169,7 +162,7 @@ export default async function CustomersPage({ searchParams }: PageProps) {
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 text-sm rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition-colors"
               >
                 Cari
               </button>
@@ -191,8 +184,8 @@ export default async function CustomersPage({ searchParams }: PageProps) {
                 href={`/customers?age=${encodeURIComponent(filter.value)}${searchQuery}${sortQuery}`}
                 className={`px-3 py-1.5 text-sm rounded-lg border font-medium transition-colors ${
                   (searchParams.age || 'all') === filter.value
-                    ? 'bg-blue-600 border-blue-600 text-white'
-                    : 'border-gray-300 text-gray-600 hover:border-blue-400 hover:text-blue-600'
+                    ? 'bg-red-600 border-red-600 text-white'
+                    : 'border-gray-300 text-gray-600 hover:border-red-400 hover:text-red-600'
                 }`}
               >
                 {filter.label}

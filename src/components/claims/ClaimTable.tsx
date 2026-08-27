@@ -68,7 +68,7 @@ export default function ClaimTable({ claims, isSuperAdmin }: ClaimTableProps) {
                   <td className="px-4 py-3">
                     <Link
                       href={customerLink}
-                      className="font-medium text-gray-900 hover:text-blue-600 transition-colors"
+                      className="font-medium text-gray-900 hover:text-red-600 transition-colors"
                     >
                       {customer?.nama || '-'}
                     </Link>
@@ -134,7 +134,7 @@ export default function ClaimTable({ claims, isSuperAdmin }: ClaimTableProps) {
                       <div className="flex items-center justify-end gap-1">
                         <Link
                           href={`/claims/${claim.id}`}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                          className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                           title="Detail Klaim"
                         >
                           <Eye size={16} />

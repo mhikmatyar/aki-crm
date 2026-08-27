@@ -64,7 +64,7 @@ export default async function ClaimDetailPage({ params }: { params: { id: string
     : `/customers/${customer?.id}`
 
   const kondisiColors: Record<string, string> = {
-    A: 'bg-blue-100 text-blue-700',
+    A: 'bg-red-100 text-red-700',
     B: 'bg-orange-100 text-orange-700',
     C: 'bg-green-100 text-green-700',
     D: 'bg-red-100 text-red-700',
@@ -121,7 +121,7 @@ export default async function ClaimDetailPage({ params }: { params: { id: string
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <p className="text-gray-400 text-xs">Nama</p>
-            <Link href={customerLink} className="font-medium text-blue-600 hover:underline">
+            <Link href={customerLink} className="font-medium text-red-600 hover:underline">
               {customer?.nama}
             </Link>
           </div>

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "1723447828000",
+    "title": "Fantasy Warrior Character - Epic Battle",
+    "model": "Runway Gen-3",
+    "characterSheet": "Character Design:\n- Gender: Male\n- Age: 28-32\n- Hair: Long, dark brown, tied in a warrior's ponytail\n- Eyes: Piercing blue with determined gaze\n- Body Type: Athletic, muscular warrior build\n- Height: 6'2\" (188cm)\n- Clothing: Medieval fantasy armor with silver accents, blue cape\n- Accessories: Sword with glowing runes, leather gauntlets\n- Personality Traits: Brave, noble, protective\n- Expression: Determined and focused",
+    "videoPrompt": "A brave warrior in silver armor stands on a cliff overlooking a battlefield, camera slowly zooms in from wide shot to medium close-up, dramatic sunset lighting with orange and purple hues, epic cinematic style with lens flare, wind blowing through cape and hair, 4 seconds",
+    "tags": ["fantasy", "warrior", "epic", "cinematic"],
+    "createdAt": "2026-08-12T07:30:28.000Z",
+    "updatedAt": "2026-08-12T07:30:28.000Z"
+  },
+  {
+    "id": "1723447829000",
+    "title": "Anime Girl Portrait - Slice of Life",
+    "model": "Pika Labs",
+    "characterSheet": "Character Design:\n- Gender: Female\n- Age: 16-18\n- Hair: Pink, shoulder-length with twin tails, soft waves\n- Eyes: Large amber eyes with sparkle highlights\n- Body Type: Slim, petite anime proportions\n- Height: 5'3\" (160cm)\n- Clothing: Japanese school uniform with red bow tie, pleated navy skirt\n- Accessories: Cherry blossom hairpin, white knee socks\n- Personality Traits: Cheerful, energetic, kind-hearted\n- Expression: Gentle smile with slight head tilt",
+    "videoPrompt": "Anime girl in school uniform standing under cherry blossom tree, gentle breeze making petals fall, camera orbits slowly from front to side, soft afternoon lighting with warm filter, petals dancing in the wind, peaceful slice-of-life mood",
+    "tags": ["anime", "school", "slice-of-life", "cherry-blossom"],
+    "createdAt": "2026-08-12T07:30:29.000Z",
+    "updatedAt": "2026-08-12T07:30:29.000Z"
+  },
+  {
+    "id": "1723447830000",
+    "title": "Cyberpunk Character - Night City",
+    "model": "Leonardo AI",
+    "characterSheet": "Character Design:\n- Gender: Female\n- Age: 25-28\n- Hair: Short, asymmetrical cut with neon blue highlights\n- Eyes: Cybernetic implants with orange LED glow\n- Body Type: Athletic with visible cybernetic enhancements\n- Height: 5'8\" (173cm)\n- Clothing: Black tactical jacket with LED strips, tech wear pants\n- Accessories: Holographic display on wrist, neural link port on temple\n- Personality Traits: Confident, tech-savvy, mysterious\n- Expression: Cool and calculating with slight smirk",
+    "videoPrompt": "Cyberpunk character walking through neon-lit rainy street at night, camera tracking shot following from behind then moving to side profile, vibrant neon reflections on wet pavement, purple and blue color grading, cyberpunk aesthetic with rain effects, holographic advertisements in background",
+    "tags": ["cyberpunk", "sci-fi", "neon", "futuristic"],
+    "createdAt": "2026-08-12T07:30:30.000Z",
+    "updatedAt": "2026-08-12T07:30:30.000Z"
+  },
+  {
+    "id": "1723447831000",
+    "title": "Realistic Portrait - Professional Headshot",
+    "model": "Stable Video Diffusion",
+    "characterSheet": "Character Sheet:\n- Ethnicity: Asian\n- Age: 30-35\n- Face: Oval face shape, defined cheekbones, professional appearance\n- Hair: Short, neat black hair with side part, well-groomed\n- Build: Average, professional posture\n- Clothing Style: Navy blue business suit, white dress shirt, burgundy tie\n- Distinguishing Features: Confident smile, warm eyes, minimal beard stubble",
+    "videoPrompt": "Professional businessman portrait, subject maintaining eye contact with camera, slight natural smile developing, camera slowly pushing in from medium shot to close-up, soft key lighting from 45 degrees, clean white background, professional corporate style, subtle head movement showing confidence",
+    "tags": ["professional", "portrait", "business", "realistic"],
+    "createdAt": "2026-08-12T07:30:31.000Z",
+    "updatedAt": "2026-08-12T07:30:31.000Z"
+  },
+  {
+    "id": "1723447832000",
+    "title": "3D Character - Game Cutscene",
+    "model": "AnimateDiff",
+    "characterSheet": "3D Character Reference:\n- Model Style: Stylized realistic (Unreal Engine 5 quality)\n- Gender: Male\n- Proportions: Heroic proportions with exaggerated muscles\n- Color Palette: Red primary armor, gold accents, dark grey undersuit\n- Texture: Metallic armor with battle damage, matte cloth parts\n- Rigging: Full facial rig with blend shapes\n- Expression Range: Heroic, determined, angry battle cry",
+    "videoPrompt": "Scene: Ancient temple ruins\nAction: 3D hero character drawing sword and taking battle stance\nCamera: Dramatic low angle shot rotating around character 180 degrees\nLighting: Dramatic rim lighting with volumetric god rays through temple columns\nStyle: Epic game cutscene with particle effects (dust, embers)\nDuration: 5 seconds\nAdditional notes: Slow-motion effect at sword draw moment",
+    "tags": ["3d", "game", "hero", "action"],
+    "createdAt": "2026-08-12T07:30:32.000Z",
+    "updatedAt": "2026-08-12T07:30:32.000Z"
+  }
+]

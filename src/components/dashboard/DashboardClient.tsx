@@ -155,7 +155,7 @@ export function DashboardClient({ currentUserId }: DashboardClientProps) {
             followupState = 'followup_2'
             activeStatus = 'done'
             activeStatusText = `Follow-Up 2 Sent - ${milestone} Bln`
-            activeStatusColor = 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50 font-semibold'
+            activeStatusColor = 'bg-red-50 text-red-700 border-red-200 hover:bg-red-50 font-semibold'
           } else if (milestoneLogs.length === 1) {
             followupState = 'followup_1'
             activeStatus = 'done'
@@ -193,7 +193,7 @@ export function DashboardClient({ currentUserId }: DashboardClientProps) {
           hargaBeli: purchase.harga_beli,
           tanggalPembelian: purchase.tanggal_pembelian,
           tukarTambah: purchase.tukar_tambah,
-          cabangNama: purchase.branch?.nama_cabang || 'Pusat',
+          cabangNama: purchase.lokasi_cabang || 'Pusat',
           ageDays,
           ageMonths,
           milestone: activeMilestone,
@@ -365,8 +365,8 @@ export function DashboardClient({ currentUserId }: DashboardClientProps) {
               <p className="text-xs text-gray-500 font-medium">Total Customer</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">{stats.totalCustomers}</p>
             </div>
-            <div className="bg-blue-50 p-2.5 rounded-lg">
-              <Users className="w-5 h-5 text-blue-500" />
+            <div className="bg-red-50 p-2.5 rounded-lg">
+              <Users className="w-5 h-5 text-red-500" />
             </div>
           </CardContent>
         </Card>

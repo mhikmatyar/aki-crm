@@ -14,10 +14,7 @@ interface ClaimPurchaseOption {
   tanggal_pembelian: string
   durasi_garansi_bulan: number
   status_garansi: string
-  branches?: {
-    nama_cabang: string
-    kota: string
-  } | null
+  lokasi_cabang?: string | null
   vehicle: {
     id: string
     customer_id: string
@@ -173,11 +170,11 @@ export default function ClaimForm({ customers, userId, initialPurchaseId }: Clai
       </div>
 
       {selectedPurchase && (
-        <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-          <h3 className="text-sm font-semibold text-blue-900 mb-3">Data Pembelian Terpilih</h3>
+        <div className="bg-red-50 border border-red-100 rounded-xl p-4">
+          <h3 className="text-sm font-semibold text-red-900 mb-3">Data Pembelian Terpilih</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
             <div>
-              <p className="text-blue-600 text-xs">Customer</p>
+              <p className="text-red-600 text-xs">Customer</p>
               <p className="font-medium text-gray-900">{selectedPurchase.customer.nama}</p>
             </div>
             <div>
@@ -219,9 +216,7 @@ export default function ClaimForm({ customers, userId, initialPurchaseId }: Clai
             <div>
               <p className="text-blue-600 text-xs">Cabang</p>
               <p className="font-medium text-gray-900">
-                {selectedPurchase.branches
-                  ? `${selectedPurchase.branches.nama_cabang} (${selectedPurchase.branches.kota})`
-                  : '-'}
+                {selectedPurchase.lokasi_cabang || '-'}
               </p>
             </div>
           </div>

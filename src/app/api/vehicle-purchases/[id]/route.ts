@@ -29,12 +29,7 @@ export async function GET(
             catatan_umum,
             is_agen
           )
-        ),
-        branch:branches!vehicle_purchases_lokasi_cabang_fkey (
-          id,
-          nama_cabang,
-          kota
-        )
+      )
       `)
       .eq('id', id)
       .single()

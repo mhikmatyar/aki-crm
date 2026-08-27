@@ -1,8 +1,8 @@
 # Panduan Alur Fitur AKI CRM
 
-Last updated: 6 Agustus 2026
+Last updated: 7 Agustus 2026
 
-Dokumen ini menjelaskan alur penggunaan fitur utama AKI CRM setelah perubahan struktur data baru:
+Dokumen ini menjelaskan alur penggunaan fitur utama AKI CRM setelah perubahan struktur data baru, termasuk login, pengelolaan customer, kendaraan, pembelian aki, reminder WhatsApp, klaim, manajemen user, dan alur operasional harian.
 
 ```txt
 customer_profiles -> vehicles -> vehicle_purchases
@@ -549,3 +549,133 @@ Customer Detail
         -> Simpan Klaim
           -> Done Claim jika selesai
 ```
+
+---
+
+## 14. Alur CRUD dan Aksi Utama
+
+Dokumen ini juga memudahkan pemahaman tentang aksi yang bisa dilakukan user pada tiap modul.
+
+### Customer
+
+1. Buka halaman /customers.
+2. Gunakan search atau filter untuk menemukan customer.
+3. Klik detail untuk melihat kendaraan dan pembelian aki customer.
+4. Tambah customer baru dari /customers/new.
+5. Edit data customer dari halaman detail jika diperlukan.
+6. Hapus customer hanya tersedia untuk Super Admin.
+
+### Kendaraan
+
+1. Buka detail customer.
+2. Pilih tombol tambah kendaraan.
+3. Isi jenis mobil, plat, dan data terkait.
+4. Simpan.
+5. Jika perlu, lakukan edit atau hapus kendaraan dari daftar kendaraan yang ada.
+
+### Pembelian Aki
+
+1. Buka detail customer.
+2. Pilih kendaraan yang sesuai.
+3. Tambah pembelian aki baru.
+4. Isi merek, tipe, harga, tanggal pembelian, cabang, garansi, tukar tambah, dan catatan.
+5. Setelah tersimpan, pembelian tersebut akan muncul di riwayat pembelian pada kendaraan terkait.
+6. Edit atau hapus pembelian bisa dilakukan dari detail kendaraan / pembelian yang dipilih.
+
+### Reminder WhatsApp
+
+1. Dashboard menampilkan item follow-up yang aktif.
+2. Jika sudah waktunya, user klik tombol kirim WA.
+3. Pesan otomatis terbuka lalu bisa diedit.
+4. Setelah dikirim, sistem menambahkan log ke wa_logs.
+5. Jika customer membalas, user bisa menandai Ada Respon.
+6. Super Admin bisa menghapus log jika diperlukan.
+
+### Klaim
+
+1. Klaim dibuat dari riwayat pembelian aki tertentu.
+2. Setelah disimpan, klaim akan tampil di halaman /claims.
+3. Detail klaim bisa dibuka untuk melihat data lengkap dan status.
+4. Saat klaim selesai, klik Done Claim untuk mengubah status menjadi Selesai.
+
+### User Management
+
+1. Hanya Super Admin yang bisa membuka halaman /admin/users.
+2. Super Admin bisa menambahkan user baru.
+3. Role admin dan super_admin akan tampil di daftar user.
+4. Admin biasa bisa input dan edit data, tetapi tidak punya akses hapus data yang dibatasi.
+
+---
+
+## 15. Panduan Peran dan Akses
+
+### Admin
+
+Peran Admin biasanya dipakai untuk operasi harian:
+
+- Membuka dashboard.
+- Melihat dan mencari customer.
+- Menambah customer baru.
+- Menambah kendaraan dan pembelian aki.
+- Melakukan reminder WhatsApp.
+- Membuat klaim.
+- Menandai klaim selesai.
+
+### Super Admin
+
+Super Admin memiliki akses tambahan:
+
+- Menghapus data tertentu.
+- Membuka halaman manajemen user.
+- Melihat fitur yang dibatasi role.
+- Mengelola log WhatsApp yang lebih luas.
+
+### Alur akses sistem
+
+Saat user login:
+
+1. Sistem memeriksa autentikasi.
+2. Jika belum login, diarahkan ke /login.
+3. Jika sudah login, user diarahkan ke halaman utama yang sesuai role.
+4. Halaman sensitif seperti /admin/users hanya bisa diakses oleh Super Admin.
+
+---
+
+## 16. Ringkasan Operasional Harian
+
+### Saat pagi / mulai kerja
+
+- Buka dashboard untuk melihat customer yang perlu follow-up.
+- Periksa reminder yang sudah masuk window 14 hari sebelum milestone.
+- Pilih customer yang perlu dikirim WA 1 atau WA 2.
+
+### Saat tengah hari
+
+- Lakukan follow-up WhatsApp.
+- Catat respon customer.
+- Periksa klaim yang masih aktif.
+
+### Saat akhir hari
+
+- Pastikan semua follow-up penting sudah ditangani.
+- Tutup klaim yang sudah selesai.
+- Periksa log WhatsApp untuk audit atau bukti aktivitas.
+
+---
+
+## 17. Catatan Implementasi Saat Ini
+
+Alur fitur yang dijelaskan di dokumen ini mengacu pada implementasi aplikasi AKI CRM yang saat ini memakai struktur data:
+
+```txt
+customer_profiles -> vehicles -> vehicle_purchases
+```
+
+Dan modul pendukung:
+
+```txt
+vehicle_purchases -> wa_logs
+vehicle_purchases -> claims
+```
+
+Artinya, reminder dan klaim sekarang terhubung langsung ke pembelian aki tertentu, bukan hanya ke customer secara umum.

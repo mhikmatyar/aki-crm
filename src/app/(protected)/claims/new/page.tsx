@@ -22,14 +22,7 @@ export default async function NewClaimPage({
       *,
       vehicles (
         *,
-        vehicle_purchases (
-          *,
-          branches:lokasi_cabang (
-            id,
-            nama_cabang,
-            kota
-          )
-        )
+        vehicle_purchases (*)
       )
     `)
     .order('nama', { ascending: true })

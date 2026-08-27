@@ -201,7 +201,7 @@ export function PurchaseHistory({ vehicleId, purchases, onRefresh }: PurchaseHis
                         </div>
                         <div>
                           <p className="text-gray-600">Lokasi Pembelian</p>
-                          <p className="font-medium">{purchase.branches ? `${purchase.branches.nama_cabang} (${purchase.branches.kota})` : '-'}</p>
+                          <p className="font-medium">{purchase.lokasi_cabang || '-'}</p>
                         </div>
                       </div>
 
