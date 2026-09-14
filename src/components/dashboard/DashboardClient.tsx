@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select } from '@/components/ui/select'
 import WAModal from '@/components/customers/WAModal'
+import Pagination from '@/components/ui/Pagination'
 import { createClient } from '@/lib/supabase/client'
 
 interface DashboardStats {
@@ -66,7 +67,12 @@ export function DashboardClient({ currentUserId }: DashboardClientProps) {
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'waiting' | 'done'>('all')
   const [scheduleFilter, setScheduleFilter] = useState<'all' | 'due' | 'overdue'>('all')
   const [searchTerm, setSearchTerm] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
   const [isLoading, setIsLoading] = useState(true)
+  
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, milestoneFilter, statusFilter, scheduleFilter])
   
   // WA Modal state
   const [activeWaModal, setActiveWaModal] = useState<{
@@ -288,6 +294,10 @@ export function DashboardClient({ currentUserId }: DashboardClientProps) {
     return b.ageDays - a.ageDays
   })
 
+  const PAGE_SIZE = 20
+  const totalPages = Math.ceil(sortedReminders.length / PAGE_SIZE) || 1
+  const paginatedReminders = sortedReminders.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -454,7 +464,7 @@ export function DashboardClient({ currentUserId }: DashboardClientProps) {
                   </td>
                 </tr>
               ) : (
-                sortedReminders.map((item) => (
+                paginatedReminders.map((item) => (
                   <tr key={item.purchaseId} className="hover:bg-gray-50 transition-colors">
                     <td className="px-5 py-4">
                       <div className="flex flex-col">
@@ -615,6 +625,16 @@ export function DashboardClient({ currentUserId }: DashboardClientProps) {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={sortedReminders.length}
+          pageSize={PAGE_SIZE}
+          onPageChange={setCurrentPage}
+          itemLabel="antrian follow-up"
+        />
       </div>
 
       {activeWaModal && (

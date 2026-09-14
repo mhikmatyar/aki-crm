@@ -21,15 +21,17 @@ export default async function ClaimsPage({ searchParams }: PageProps) {
     .eq('id', user.id)
     .single()
 
-  const isSuperAdmin = profile?.role === 'super_admin'
+  const isSuperAdmin = ['super_admin', 'owner'].includes(profile?.role)
 
   let query = supabase
     .from('claims')
     .select('*')
     .order('created_at', { ascending: false })
 
-  if (searchParams.status && searchParams.status !== 'all') {
-    query = query.eq('status', searchParams.status)
+  const currentStatus = searchParams.status || 'aktif'
+
+  if (currentStatus !== 'all') {
+    query = query.eq('status', currentStatus)
   }
 
   const { data: claims } = await query
@@ -123,7 +125,7 @@ export default async function ClaimsPage({ searchParams }: PageProps) {
               key={s.value}
               href={`/claims?status=${s.value}`}
               className={`px-3 py-1.5 text-sm rounded-lg border font-medium transition-colors ${
-                (searchParams.status || 'all') === s.value
+                (searchParams.status || 'aktif') === s.value
                   ? 'bg-red-600 border-red-600 text-white'
                   : 'border-gray-300 text-gray-600 hover:border-red-400 hover:text-red-600'
               }`}

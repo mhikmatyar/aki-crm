@@ -17,7 +17,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
     .eq('id', user.id)
     .single()
 
-  const isSuperAdmin = profile?.role === 'super_admin'
+  const isSuperAdmin = ['super_admin', 'owner'].includes(profile?.role)
 
   return (
     <CustomerDetailClient

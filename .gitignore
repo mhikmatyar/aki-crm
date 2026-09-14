@@ -3,5 +3,6 @@ node_modules/
 .env.local
 .vercel
 *.log
+*.exe
 next-env.d.ts
 tsconfig.tsbuildinfo

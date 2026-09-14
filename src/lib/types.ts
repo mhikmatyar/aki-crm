@@ -70,7 +70,7 @@ export interface WaLog {
 export interface UserProfile {
   id: string
   email: string
-  role: 'super_admin' | 'admin'
+  role: 'super_admin' | 'owner' | 'admin'
   nama: string
   aktif: boolean
 }

@@ -1,8 +1,10 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Eye, Users } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import Pagination from '@/components/ui/Pagination'
 import { customerHref } from '@/lib/customer-code'
 import { getWarrantyStatus } from '@/lib/utils'
 
@@ -82,6 +84,12 @@ function getLatestPurchase(customer: CustomerProfile) {
 }
 
 export default function CustomerProfileList({ customers }: CustomerProfileListProps) {
+  const [currentPage, setCurrentPage] = useState(1)
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [customers])
+
   if (customers.length === 0) {
     return (
       <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
@@ -93,6 +101,10 @@ export default function CustomerProfileList({ customers }: CustomerProfileListPr
       </div>
     )
   }
+
+  const PAGE_SIZE = 20
+  const totalPages = Math.ceil(customers.length / PAGE_SIZE) || 1
+  const paginatedCustomers = customers.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -110,7 +122,7 @@ export default function CustomerProfileList({ customers }: CustomerProfileListPr
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {customers.map((customer) => {
+            {paginatedCustomers.map((customer) => {
               const href = customerHref(customer)
               const vehicleCount = customer.vehicles?.length || 0
               const totalPurchases = customer.vehicles?.reduce(
@@ -250,6 +262,16 @@ export default function CustomerProfileList({ customers }: CustomerProfileListPr
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={customers.length}
+        pageSize={PAGE_SIZE}
+        onPageChange={setCurrentPage}
+        itemLabel="customer"
+      />
     </div>
   )
 }

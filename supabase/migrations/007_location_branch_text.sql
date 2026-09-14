@@ -6,7 +6,7 @@ ALTER TABLE vehicle_purchases ADD COLUMN IF NOT EXISTS lokasi_cabang_text text;
 UPDATE vehicle_purchases vp
 SET lokasi_cabang_text = COALESCE(b.nama_cabang || ' - ' || b.kota, vp.lokasi_cabang::text)
 FROM branches b
-WHERE vp.lokasi_cabang = b.id;
+WHERE vp.lokasi_cabang::text = b.id::text;
 
 UPDATE vehicle_purchases
 SET lokasi_cabang_text = lokasi_cabang::text

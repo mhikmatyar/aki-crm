@@ -13,9 +13,10 @@ interface PurchaseHistoryProps {
   vehicleId: string
   purchases: VehiclePurchase[]
   onRefresh: () => void
+  isSuperAdmin?: boolean
 }
 
-export function PurchaseHistory({ vehicleId, purchases, onRefresh }: PurchaseHistoryProps) {
+export function PurchaseHistory({ vehicleId, purchases, onRefresh, isSuperAdmin }: PurchaseHistoryProps) {
   const [showForm, setShowForm] = useState(false)
   const [editingPurchase, setEditingPurchase] = useState<VehiclePurchase | null>(null)
   const [isDeleting, setIsDeleting] = useState<string | null>(null)
@@ -179,14 +180,16 @@ export function PurchaseHistory({ vehicleId, purchases, onRefresh }: PurchaseHis
                           >
                             Edit
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleDelete(purchase.id)}
-                            disabled={isDeleting === purchase.id}
-                          >
-                            {isDeleting === purchase.id ? 'Menghapus...' : 'Hapus'}
-                          </Button>
+                          {isSuperAdmin && (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDelete(purchase.id)}
+                              disabled={isDeleting === purchase.id}
+                            >
+                              {isDeleting === purchase.id ? 'Menghapus...' : 'Hapus'}
+                            </Button>
+                          )}
                         </div>
                       </div>
 

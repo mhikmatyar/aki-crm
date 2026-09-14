@@ -19,15 +19,19 @@ export async function POST(req: Request) {
       .eq('id', user.id)
       .single()
 
-    if (profile?.role !== 'super_admin') {
+    if (!['super_admin', 'owner'].includes(profile?.role)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const body = await req.json()
     const { nama, email, password, role } = body
 
-    if (!nama || !email || !password || !role) {
-      return NextResponse.json({ error: 'Data tidak lengkap.' }, { status: 400 })
+    if (!nama || !email || !password || !role || !['admin', 'owner', 'super_admin'].includes(role)) {
+      return NextResponse.json({ error: 'Data tidak lengkap atau role tidak valid.' }, { status: 400 })
+    }
+
+    if (profile?.role === 'owner' && role === 'super_admin') {
+      return NextResponse.json({ error: 'Owner tidak dapat membuat akun Super Admin.' }, { status: 403 })
     }
 
     // Use service_role key for admin operations

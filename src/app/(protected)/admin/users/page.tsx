@@ -16,7 +16,7 @@ export default async function AdminUsersPage() {
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'super_admin') {
+  if (!['super_admin', 'owner'].includes(profile?.role)) {
     redirect('/dashboard')
   }
 
@@ -39,15 +39,15 @@ export default async function AdminUsersPage() {
           <div className="bg-white rounded-xl border border-gray-200 p-5">
             <h2 className="font-semibold text-gray-900 mb-1">Tambah User Baru</h2>
             <p className="text-xs text-gray-400 mb-4">
-              Admin hanya bisa input &amp; edit data. Super Admin bisa input, edit, dan hapus data.
+              Admin hanya bisa input &amp; edit data. Owner dan Super Admin bisa hapus data.
             </p>
-            <AddUserForm />
+            <AddUserForm currentUserRole={profile?.role} />
           </div>
         </div>
 
         <div className="lg:col-span-2">
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <UserManagementClient users={users || []} currentUserId={user.id} />
+            <UserManagementClient users={users || []} currentUserId={user.id} currentUserRole={profile?.role} />
           </div>
         </div>
       </div>

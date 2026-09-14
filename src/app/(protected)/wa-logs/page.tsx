@@ -20,7 +20,7 @@ export default async function WALogsPage() {
     .select('*, branches(nama_cabang)')
     .order('waktu_kirim', { ascending: false })
 
-  const isSuperAdmin = profile?.role === 'super_admin'
+  const isSuperAdmin = ['super_admin', 'owner'].includes(profile?.role)
 
   return <WALogsClient initialLogs={logs || []} isSuperAdmin={isSuperAdmin} />
 }

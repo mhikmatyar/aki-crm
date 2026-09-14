@@ -21,7 +21,7 @@ export default async function ClaimDetailPage({ params }: { params: { id: string
     .eq('id', user.id)
     .single()
 
-  const isSuperAdmin = profile?.role === 'super_admin'
+  const isSuperAdmin = ['super_admin', 'owner'].includes(profile?.role)
 
   const { data: claim } = await supabase
     .from('claims')

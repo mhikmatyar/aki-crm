@@ -7,8 +7,8 @@ async function authorize() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
   const { data: profile } = await supabase.from('user_profiles').select('role').eq('id', user.id).single()
-  if (profile?.role !== 'super_admin') return { error: NextResponse.json({ error: 'Forbidden' }, { status: 403 }) }
-  return { user }
+  if (!['super_admin', 'owner'].includes(profile?.role)) return { error: NextResponse.json({ error: 'Forbidden' }, { status: 403 }) }
+  return { user, role: profile?.role as 'super_admin' | 'owner' }
 }
 
 function adminClient() {
@@ -27,11 +27,27 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
     const body = await req.json()
     const { nama, email, role, aktif, password } = body
-    if (!nama || !email || !['admin', 'super_admin'].includes(role) || typeof aktif !== 'boolean') {
+    if (!nama || !email || !['admin', 'owner', 'super_admin'].includes(role) || typeof aktif !== 'boolean') {
       return NextResponse.json({ error: 'Data user tidak valid.' }, { status: 400 })
     }
 
     const supabaseAdmin = adminClient()
+
+    if (auth.role === 'owner') {
+      const { data: targetProfile } = await supabaseAdmin
+        .from('user_profiles')
+        .select('role')
+        .eq('id', params.id)
+        .single()
+
+      if (targetProfile?.role === 'super_admin') {
+        return NextResponse.json({ error: 'Owner tidak dapat mengubah akun Super Admin.' }, { status: 403 })
+      }
+      if (role === 'super_admin') {
+        return NextResponse.json({ error: 'Owner tidak dapat menetapkan role Super Admin.' }, { status: 403 })
+      }
+    }
+
     const authUpdate: { email?: string; password?: string; user_metadata?: { nama: string } } = {
       email: email.trim(),
       user_metadata: { nama: nama.trim() },
@@ -61,7 +77,22 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
       return NextResponse.json({ error: 'SUPABASE_SERVICE_ROLE_KEY belum diatur di .env.local.' }, { status: 500 })
     }
-    const { error } = await adminClient().auth.admin.deleteUser(params.id)
+
+    const supabaseAdmin = adminClient()
+
+    if (auth.role === 'owner') {
+      const { data: targetProfile } = await supabaseAdmin
+        .from('user_profiles')
+        .select('role')
+        .eq('id', params.id)
+        .single()
+
+      if (targetProfile?.role === 'super_admin') {
+        return NextResponse.json({ error: 'Owner tidak dapat menghapus akun Super Admin.' }, { status: 403 })
+      }
+    }
+
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(params.id)
     if (error) return NextResponse.json({ error: error.message }, { status: 400 })
     return NextResponse.json({ success: true })
   } catch (error: any) {

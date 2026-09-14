@@ -103,7 +103,7 @@ export default function Sidebar({ role, userEmail, userName, isCollapsed: contro
           )
         })}
 
-        {role === 'super_admin' && (
+        {(role === 'super_admin' || role === 'owner') && (
           <>
             {!isCollapsed && (
               <div className="pt-6 pb-2 px-4">
@@ -140,7 +140,7 @@ export default function Sidebar({ role, userEmail, userName, isCollapsed: contro
         {!isCollapsed && userName && (
           <div className="px-4 py-2 mb-2">
             <p className="text-white text-sm font-medium truncate">{userName}</p>
-            <p className="text-gray-400 text-xs truncate">{role === 'super_admin' ? 'Admin' : 'User'}</p>
+            <p className="text-gray-400 text-xs truncate">{role === 'super_admin' ? 'Super Admin' : role === 'owner' ? 'Owner' : 'Admin'}</p>
           </div>
         )}
         <button

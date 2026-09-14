@@ -11,9 +11,10 @@ interface VehicleListProps {
   customerId: string
   vehicles: VehicleWithPurchases[]
   onRefresh: () => void
+  isSuperAdmin?: boolean
 }
 
-export function VehicleList({ customerId, vehicles, onRefresh }: VehicleListProps) {
+export function VehicleList({ customerId, vehicles, onRefresh, isSuperAdmin }: VehicleListProps) {
   const [showForm, setShowForm] = useState(false)
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null)
   const [isDeleting, setIsDeleting] = useState<string | null>(null)
@@ -141,14 +142,16 @@ export function VehicleList({ customerId, vehicles, onRefresh }: VehicleListProp
                         >
                           Edit
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDelete(vehicle.id)}
-                          disabled={isDeleting === vehicle.id}
-                        >
-                          {isDeleting === vehicle.id ? 'Menghapus...' : 'Hapus'}
-                        </Button>
+                        {isSuperAdmin && (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDelete(vehicle.id)}
+                            disabled={isDeleting === vehicle.id}
+                          >
+                            {isDeleting === vehicle.id ? 'Menghapus...' : 'Hapus'}
+                          </Button>
+                        )}
                       </div>
                     </div>
 
@@ -157,6 +160,7 @@ export function VehicleList({ customerId, vehicles, onRefresh }: VehicleListProp
                         vehicleId={vehicle.id}
                         purchases={vehicle.purchases || []}
                         onRefresh={onRefresh}
+                        isSuperAdmin={isSuperAdmin}
                       />
                     </div>
                   </div>

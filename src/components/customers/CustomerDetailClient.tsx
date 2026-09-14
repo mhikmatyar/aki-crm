@@ -55,7 +55,7 @@ export function CustomerDetailClient({
   }, [customerId])
 
   const handleDelete = async () => {
-    if (!confirm('Hapus customer ini? Semua kendaraan dan riwayat pembelian akan ikut terhapus.')) {
+    if (!confirm('Hapus customer ini? Semua kendaraan, riwayat pembelian, klaim, dan log WhatsApp terkait akan ikut terhapus.')) {
       return
     }
 
@@ -65,10 +65,12 @@ export function CustomerDetailClient({
       })
 
       if (!res.ok) {
-        throw new Error('Failed to delete customer')
+        const errorData = await res.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Gagal menghapus data customer')
       }
 
       router.push('/customers')
+      router.refresh()
     } catch (err: any) {
       alert(err.message)
     }
@@ -241,6 +243,7 @@ export function CustomerDetailClient({
         customerId={customer.id}
         vehicles={customer.vehicles || []}
         onRefresh={fetchCustomer}
+        isSuperAdmin={isSuperAdmin}
       />
 
       {/* Statistics Summary */}

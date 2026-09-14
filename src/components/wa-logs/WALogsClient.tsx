@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { MessageCircle, Search, Calendar, Landmark, CheckCircle2, AlertCircle, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import Pagination from '@/components/ui/Pagination'
 import { createClient } from '@/lib/supabase/client'
 
 interface LogEntry {
@@ -36,7 +37,12 @@ export function WALogsClient({ initialLogs, isSuperAdmin }: WALogsClientProps) {
   const [logs] = useState<LogEntry[]>(initialLogs)
   const [activeTab, setActiveTab] = useState<'all' | '12' | '18' | '24' | 'others'>('all')
   const [searchTerm, setSearchTerm] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
   const [loadingId, setLoadingId] = useState<string | null>(null)
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [activeTab, searchTerm])
 
   const formatDateTime = (dateStr: string) => {
     return new Date(dateStr).toLocaleString('id-ID', {
@@ -156,6 +162,10 @@ export function WALogsClient({ initialLogs, isSuperAdmin }: WALogsClientProps) {
       alert('Gagal menghapus log.')
     }
   }
+
+  const PAGE_SIZE = 20
+  const totalPages = Math.ceil(filteredLogs.length / PAGE_SIZE) || 1
+  const paginatedLogs = filteredLogs.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
   return (
     <div className="space-y-6">
@@ -304,7 +314,7 @@ export function WALogsClient({ initialLogs, isSuperAdmin }: WALogsClientProps) {
                   </td>
                 </tr>
               ) : (
-                filteredLogs.map((log) => {
+                paginatedLogs.map((log) => {
                   const hasResponded = respondedKeys.has(`${log.vehicle_purchase_id}_${log.durasi_saat_kirim}`)
 
                   return (
@@ -399,6 +409,16 @@ export function WALogsClient({ initialLogs, isSuperAdmin }: WALogsClientProps) {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={filteredLogs.length}
+          pageSize={PAGE_SIZE}
+          onPageChange={setCurrentPage}
+          itemLabel="log pesan"
+        />
       </div>
     </div>
   )

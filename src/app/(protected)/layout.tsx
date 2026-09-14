@@ -23,7 +23,7 @@ export default async function ProtectedLayout({
   const userProfile = {
     id: user.id,
     email: user.email || '',
-    role: (profile?.role as 'super_admin' | 'admin') || 'admin',
+    role: (profile?.role as 'super_admin' | 'owner' | 'admin') || 'admin',
     nama: profile?.nama || '',
     aktif: profile?.aktif ?? true,
   }

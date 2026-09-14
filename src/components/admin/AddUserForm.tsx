@@ -4,7 +4,11 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff } from 'lucide-react'
 
-export default function AddUserForm() {
+interface AddUserFormProps {
+  currentUserRole?: 'super_admin' | 'owner' | 'admin'
+}
+
+export default function AddUserForm({ currentUserRole = 'super_admin' }: AddUserFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -15,7 +19,7 @@ export default function AddUserForm() {
     nama: '',
     email: '',
     password: '',
-    role: 'admin' as 'admin' | 'super_admin',
+    role: 'admin' as 'admin' | 'owner' | 'super_admin',
   })
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
@@ -142,7 +146,10 @@ export default function AddUserForm() {
           className={fieldClass}
         >
           <option value="admin">Admin — input & edit</option>
-          <option value="super_admin">Super Admin — input, edit & hapus</option>
+          <option value="owner">Owner — input, edit & hapus</option>
+          {currentUserRole === 'super_admin' && (
+            <option value="super_admin">Super Admin — developer</option>
+          )}
         </select>
       </div>
 

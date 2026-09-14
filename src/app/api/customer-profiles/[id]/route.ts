@@ -144,26 +144,83 @@ export async function DELETE(
 ) {
   try {
     const supabase = createClient()
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { data: profileUser } = await supabase
+      .from('user_profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!['super_admin', 'owner'].includes(profileUser?.role)) {
+      return NextResponse.json(
+        { error: 'Forbidden: Hanya Super Admin dan Owner yang dapat menghapus customer.' },
+        { status: 403 }
+      )
+    }
+
     const idOrCode = params.id
     
-    const { error } = await applyCustomerLookup(
-      supabase.from('customer_profiles').delete(),
+    // 1. Get profile ID
+    const { data: profile } = await applyCustomerLookup(
+      supabase.from('customer_profiles').select('id'),
       idOrCode
-    )
+    ).maybeSingle()
+
+    if (!profile) {
+      return NextResponse.json(
+        { error: 'Customer profile not found' },
+        { status: 404 }
+      )
+    }
+
+    // 2. Clean up related claims & wa_logs first so FK constraints are not violated
+    await supabase.from('claims').delete().eq('customer_profile_id', profile.id)
+    await supabase.from('wa_logs').delete().eq('customer_profile_id', profile.id)
+
+    // Also clean up claims/wa_logs connected to purchases under this customer's vehicles
+    const { data: vehicles } = await supabase
+      .from('vehicles')
+      .select('id')
+      .eq('customer_id', profile.id)
+
+    if (vehicles && vehicles.length > 0) {
+      const vehicleIds = vehicles.map((v) => v.id)
+      const { data: purchases } = await supabase
+        .from('vehicle_purchases')
+        .select('id')
+        .in('vehicle_id', vehicleIds)
+
+      if (purchases && purchases.length > 0) {
+        const purchaseIds = purchases.map((p) => p.id)
+        await supabase.from('claims').delete().in('vehicle_purchase_id', purchaseIds)
+        await supabase.from('wa_logs').delete().in('vehicle_purchase_id', purchaseIds)
+      }
+    }
+
+    // 3. Delete the customer profile
+    const { error } = await supabase
+      .from('customer_profiles')
+      .delete()
+      .eq('id', profile.id)
     
     if (error) {
       console.error('Error deleting customer profile:', error)
       return NextResponse.json(
-        { error: 'Failed to delete customer profile' },
+        { error: error.message || 'Failed to delete customer profile' },
         { status: 500 }
       )
     }
     
     return NextResponse.json({ message: 'Customer profile deleted successfully' })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Unexpected error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error.message || 'Internal server error' },
       { status: 500 }
     )
   }

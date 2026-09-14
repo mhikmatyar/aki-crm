@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Eye, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import Pagination from '@/components/ui/Pagination'
 import { createClient } from '@/lib/supabase/client'
 import { Claim, KONDISI_KLAIM_LABELS } from '@/lib/types'
 import { formatDate } from '@/lib/utils'
@@ -17,8 +18,13 @@ interface ClaimTableProps {
 
 export default function ClaimTable({ claims, isSuperAdmin }: ClaimTableProps) {
   const router = useRouter()
+  const [currentPage, setCurrentPage] = useState(1)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [claims])
 
   async function handleDelete(id: string) {
     setDeleteLoading(true)
@@ -36,6 +42,10 @@ export default function ClaimTable({ claims, isSuperAdmin }: ClaimTableProps) {
       </div>
     )
   }
+
+  const PAGE_SIZE = 20
+  const totalPages = Math.ceil(claims.length / PAGE_SIZE) || 1
+  const paginatedClaims = claims.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -55,7 +65,8 @@ export default function ClaimTable({ claims, isSuperAdmin }: ClaimTableProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {claims.map((claim, idx) => {
+            {paginatedClaims.map((claim, idx) => {
+              const rowNumber = (currentPage - 1) * PAGE_SIZE + idx + 1
               const isDeleting = deletingId === claim.id
               const customer = claim.customer_profiles || claim.customers
               const customerLink = claim.customer_profiles
@@ -64,7 +75,7 @@ export default function ClaimTable({ claims, isSuperAdmin }: ClaimTableProps) {
 
               return (
                 <tr key={claim.id} className={`transition-colors ${isDeleting ? 'bg-red-50' : 'hover:bg-gray-50'}`}>
-                  <td className="px-4 py-3 text-gray-400">{idx + 1}</td>
+                  <td className="px-4 py-3 text-gray-400">{rowNumber}</td>
                   <td className="px-4 py-3">
                     <Link
                       href={customerLink}
@@ -157,6 +168,16 @@ export default function ClaimTable({ claims, isSuperAdmin }: ClaimTableProps) {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={claims.length}
+        pageSize={PAGE_SIZE}
+        onPageChange={setCurrentPage}
+        itemLabel="klaim"
+      />
     </div>
   )
 }
