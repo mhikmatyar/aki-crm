@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { Plus, Search } from 'lucide-react'
 import CustomerProfileList from '@/components/customers/CustomerProfileList'
 
+export const dynamic = 'force-dynamic'
+
 interface PageProps {
   searchParams: { search?: string; age?: string; sort?: string }
 }
@@ -41,30 +43,57 @@ function getLatestPurchaseDate(customer: any) {
     )
   ) || []
 
-  return dates.length > 0 ? Math.max(...dates) : 0
+  return dates.length > 0
+    ? Math.max(...dates)
+    : customer.created_at
+      ? new Date(customer.created_at).getTime()
+      : 0
 }
 
 export default async function CustomersPage({ searchParams }: PageProps) {
   const supabase = await createClient()
 
-  const { data: customers } = await supabase
-    .from('customer_profiles')
-    .select(`
-      *,
-      vehicles (
+  let customers: any[] = []
+  let from = 0
+  const step = 1000
+
+  while (true) {
+    const { data, error } = await supabase
+      .from('customer_profiles')
+      .select(`
         *,
-        vehicle_purchases (*)
-      )
-    `)
-    .order('created_at', { ascending: false })
+        vehicles (
+          *,
+          vehicle_purchases (*)
+        )
+      `)
+      .order('created_at', { ascending: false })
+      .range(from, from + step - 1)
+
+    if (error) {
+      console.error('Error fetching customers:', error)
+      break
+    }
+
+    if (data && data.length > 0) {
+      customers.push(...data)
+    }
+
+    if (!data || data.length < step) {
+      break
+    }
+
+    from += step
+  }
 
   let filtered = customers || []
 
   if (searchParams.search) {
     const q = searchParams.search.toLowerCase()
     filtered = filtered.filter((customer: any) =>
-      customer.nama.toLowerCase().includes(q) ||
-      customer.nomor_telp.includes(q) ||
+      customer.nama?.toLowerCase().includes(q) ||
+      customer.nomor_telp?.includes(q) ||
+      customer.kode_customer?.toLowerCase().includes(q) ||
       customer.vehicles?.some((vehicle: any) =>
         vehicle.jenis_mobil?.toLowerCase().includes(q) ||
         vehicle.plat_nomor?.toLowerCase().includes(q) ||
@@ -91,13 +120,13 @@ export default async function CustomersPage({ searchParams }: PageProps) {
     const latestB = getLatestPurchaseDate(b)
 
     switch (searchParams.sort) {
-      case 'newest':
-        return latestB - latestA
+      case 'oldest':
+        return latestA - latestB
       case 'name':
         return a.nama.localeCompare(b.nama)
-      case 'oldest':
+      case 'newest':
       default:
-        return latestA - latestB
+        return latestB - latestA
     }
   })
 
@@ -151,11 +180,11 @@ export default async function CustomersPage({ searchParams }: PageProps) {
 
             <select
               name="sort"
-              defaultValue={searchParams.sort || 'oldest'}
+              defaultValue={searchParams.sort || 'newest'}
               className="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="oldest">Pembelian terlama</option>
               <option value="newest">Pembelian terbaru</option>
+              <option value="oldest">Pembelian terlama</option>
               <option value="name">Nama A-Z</option>
             </select>
 

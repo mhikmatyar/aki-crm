@@ -14,75 +14,97 @@ export async function GET(request: Request) {
     const customerId = searchParams.get('customer_id')
     const ageFilter = searchParams.get('age_filter')
     
-    let query = supabase
-      .from('vehicle_purchases')
-      .select(`
-        *,
-        vehicle:vehicles!vehicle_purchases_vehicle_id_fkey (
-          id,
-          plat_nomor,
-          jenis_mobil,
-          merek_mobil,
-          customer_profile:customer_profiles!vehicles_customer_id_fkey (
-            id,
-            nama,
-            nomor_telp,
-            catatan_umum,
-            is_agen
-          )
-        )
-      `)
-      .order('tanggal_pembelian', { ascending: false })
-    
-    // Filter by vehicle
-    if (vehicleId) {
-      query = query.eq('vehicle_id', vehicleId)
-    }
-    
-    // Filter by customer (join through vehicles)
+    let vehicleIds: string[] = []
     if (customerId) {
       const { data: vehicles } = await supabase
         .from('vehicles')
         .select('id')
         .eq('customer_id', customerId)
       
-      const vehicleIds = vehicles?.map((v: any) => v.id) || []
-      if (vehicleIds.length > 0) {
-        query = query.in('vehicle_id', vehicleIds)
-      } else {
+      vehicleIds = vehicles?.map((v: any) => v.id) || []
+      if (vehicleIds.length === 0) {
         return NextResponse.json([])
       }
     }
-    
-    const { data, error } = await query
-    
-    if (error) {
-      console.error('Error fetching purchases:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch purchases' },
-        { status: 500 }
-      )
+
+    let allPurchases: any[] = []
+    let from = 0
+    const step = 1000
+
+    while (true) {
+      let pageQuery = supabase
+        .from('vehicle_purchases')
+        .select(`
+          *,
+          vehicle:vehicles!vehicle_purchases_vehicle_id_fkey (
+            id,
+            plat_nomor,
+            jenis_mobil,
+            merek_mobil,
+            customer_profile:customer_profiles!vehicles_customer_id_fkey (
+              id,
+              nama,
+              nomor_telp,
+              catatan_umum,
+              is_agen
+            )
+          )
+        `)
+        .order('tanggal_pembelian', { ascending: false })
+        .range(from, from + step - 1)
+
+      if (vehicleId) {
+        pageQuery = pageQuery.eq('vehicle_id', vehicleId)
+      }
+
+      if (customerId && vehicleIds.length > 0) {
+        pageQuery = pageQuery.in('vehicle_id', vehicleIds)
+      }
+
+      const { data: pageData, error: pageError } = await pageQuery
+
+      if (pageError) {
+        console.error('Error fetching purchases:', pageError)
+        return NextResponse.json(
+          { error: 'Failed to fetch purchases' },
+          { status: 500 }
+        )
+      }
+
+      if (pageData && pageData.length > 0) {
+        allPurchases.push(...pageData)
+      }
+
+      if (!pageData || pageData.length < step || vehicleId || (customerId && vehicleIds.length < step)) {
+        break
+      }
+
+      from += step
     }
-    
+
+    const data = allPurchases
     const purchaseIds = (data || []).map((purchase: any) => purchase.id)
     let logsByPurchase: Record<string, any[]> = {}
 
     if (purchaseIds.length > 0) {
-      const { data: logs, error: logsError } = await supabase
-        .from('wa_logs')
-        .select('id, vehicle_purchase_id, customer_id, durasi_saat_kirim, pesan_dikirim, waktu_kirim')
-        .in('vehicle_purchase_id', purchaseIds)
-        .order('waktu_kirim', { ascending: false })
+      const chunkSize = 500
+      for (let i = 0; i < purchaseIds.length; i += chunkSize) {
+        const chunk = purchaseIds.slice(i, i + chunkSize)
+        const { data: logs, error: logsError } = await supabase
+          .from('wa_logs')
+          .select('id, vehicle_purchase_id, customer_id, durasi_saat_kirim, pesan_dikirim, waktu_kirim')
+          .in('vehicle_purchase_id', chunk)
+          .order('waktu_kirim', { ascending: false })
 
-      if (!logsError) {
-        logsByPurchase = (logs || []).reduce((acc: Record<string, any[]>, log: any) => {
-          if (!log.vehicle_purchase_id) return acc
-          acc[log.vehicle_purchase_id] = acc[log.vehicle_purchase_id] || []
-          acc[log.vehicle_purchase_id].push(log)
-          return acc
-        }, {})
-      } else {
-        console.warn('WA logs relation not ready, continuing without logs:', logsError.message)
+        if (!logsError && logs) {
+          logs.forEach((log: any) => {
+            if (!log.vehicle_purchase_id) return
+            logsByPurchase[log.vehicle_purchase_id] = logsByPurchase[log.vehicle_purchase_id] || []
+            logsByPurchase[log.vehicle_purchase_id].push(log)
+          })
+        } else if (logsError) {
+          console.warn('WA logs relation not ready, continuing without logs:', logsError.message)
+        }
       }
     }
 
