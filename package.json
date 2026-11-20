@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "backup": "node scripts/backup-db.js",
+    "cleanse:brands": "node scripts/cleanse-brands.js"
   },
   "dependencies": {
     "next": "14.2.5",

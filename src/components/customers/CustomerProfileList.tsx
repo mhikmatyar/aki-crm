@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Eye, Users } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Eye, Users, MessageCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import Pagination from '@/components/ui/Pagination'
 import { customerHref } from '@/lib/customer-code'
 import { getWarrantyStatus } from '@/lib/utils'
+import WAInvoiceModal from './WAInvoiceModal'
 
 interface Purchase {
   id: string
@@ -38,6 +40,10 @@ interface CustomerProfile {
 
 interface CustomerProfileListProps {
   customers: CustomerProfile[]
+  totalCount?: number
+  currentPage?: number
+  pageSize?: number
+  currentUserId?: string
 }
 
 function getAgeMonths(date: string) {
@@ -83,195 +89,251 @@ function getLatestPurchase(customer: CustomerProfile) {
   )[0]
 }
 
-export default function CustomerProfileList({ customers }: CustomerProfileListProps) {
-  const [currentPage, setCurrentPage] = useState(1)
+export default function CustomerProfileList({
+  customers,
+  totalCount,
+  currentPage: propCurrentPage,
+  pageSize = 20,
+  currentUserId = '',
+}: CustomerProfileListProps) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const isServerPaged = typeof totalCount === 'number'
+
+  const [clientPage, setClientPage] = useState(1)
+  const currentPage = isServerPaged ? (propCurrentPage || 1) : clientPage
+
+  // Active invoice modal state
+  const [activeInvoice, setActiveInvoice] = useState<{
+    customer: CustomerProfile
+    purchase?: any
+  } | null>(null)
 
   useEffect(() => {
-    setCurrentPage(1)
-  }, [customers])
+    if (!isServerPaged) {
+      setClientPage(1)
+    }
+  }, [customers, isServerPaged])
 
   if (customers.length === 0) {
     return (
       <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
         <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-        <p className="text-gray-500 mb-2">Belum ada customer</p>
+        <p className="text-gray-500 mb-2">Tidak ada customer ditemukan</p>
         <p className="text-sm text-gray-400">
-          Klik tombol "Tambah Customer" untuk menambahkan customer pertama
+          Coba ubah kata kunci pencarian atau filter yang digunakan
         </p>
       </div>
     )
   }
 
-  const PAGE_SIZE = 20
-  const totalPages = Math.ceil(customers.length / PAGE_SIZE) || 1
-  const paginatedCustomers = customers.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const totalItems = isServerPaged ? totalCount : customers.length
+  const totalPages = Math.ceil(totalItems / pageSize) || 1
+  const paginatedCustomers = isServerPaged
+    ? customers
+    : customers.slice((clientPage - 1) * pageSize, clientPage * pageSize)
+
+  const handlePageChange = (page: number) => {
+    if (isServerPaged) {
+      const params = new URLSearchParams(searchParams?.toString() || '')
+      params.set('page', String(page))
+      router.push(`/customers?${params.toString()}`)
+    } else {
+      setClientPage(page)
+    }
+  }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">Customer</th>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">Kontak</th>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">Kendaraan</th>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">Pembelian Terbaru</th>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">Usia</th>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">Garansi</th>
-              <th className="text-right px-4 py-3 font-semibold text-gray-600">Aksi</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {paginatedCustomers.map((customer) => {
-              const href = customerHref(customer)
-              const vehicleCount = customer.vehicles?.length || 0
-              const totalPurchases = customer.vehicles?.reduce(
-                (sum, vehicle) => sum + (vehicle.vehicle_purchases?.length || 0),
-                0
-              ) || 0
-              const latestPurchase = getLatestPurchase(customer)
-              const warrantyStatus = latestPurchase
-                ? getWarrantyStatus(
-                    latestPurchase.tanggal_pembelian,
-                    latestPurchase.durasi_garansi_bulan
-                  )
-                : null
+    <>
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="text-left px-4 py-3 font-semibold text-gray-600">Customer</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-600">Kontak</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-600">Kendaraan</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-600">Pembelian Terbaru</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-600">Usia</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-600">Garansi</th>
+                <th className="text-right px-4 py-3 font-semibold text-gray-600">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {paginatedCustomers.map((customer) => {
+                const href = customerHref(customer)
+                const vehicleCount = customer.vehicles?.length || 0
+                const totalPurchases = customer.vehicles?.reduce(
+                  (sum, vehicle) => sum + (vehicle.vehicle_purchases?.length || 0),
+                  0
+                ) || 0
+                const latestPurchase = getLatestPurchase(customer)
+                const warrantyStatus = latestPurchase
+                  ? getWarrantyStatus(
+                      latestPurchase.tanggal_pembelian,
+                      latestPurchase.durasi_garansi_bulan
+                    )
+                  : null
 
-              return (
-                <tr key={customer.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3">
-                    <Link
-                      href={href}
-                      className="font-medium text-gray-900 hover:text-red-600 flex items-center gap-2"
-                    >
-                      {customer.nama}
-                      {customer.kode_customer && (
-                        <Badge variant="outline" className="text-xs">
-                          {customer.kode_customer}
-                        </Badge>
-                      )}
-                      {customer.is_agen && (
-                        <Badge variant="secondary" className="text-xs">
-                          Agen
-                        </Badge>
-                      )}
-                    </Link>
-                    {customer.catatan_umum && (
-                      <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
-                        {customer.catatan_umum}
-                      </p>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <p className="text-gray-700">{customer.nomor_telp}</p>
-                  </td>
-                  <td className="px-4 py-3">
-                    {vehicleCount > 0 ? (
-                      <div className="flex flex-col gap-1">
-                        <span className="text-gray-700 font-medium">{vehicleCount} kendaraan</span>
-                        {customer.vehicles?.[0] && (
-                          <span className="text-xs text-gray-400">
-                            {customer.vehicles[0].jenis_mobil}
-                            {customer.vehicles[0].plat_nomor && ` - ${customer.vehicles[0].plat_nomor}`}
-                            {vehicleCount > 1 && ` +${vehicleCount - 1} lainnya`}
-                          </span>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="text-gray-400 text-xs">Belum ada</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {latestPurchase ? (
-                      <div className="flex flex-col gap-1">
-                        <span className="text-gray-700 font-medium">
-                          {latestPurchase.merek_aki} {latestPurchase.tipe_aki}
-                        </span>
-                        <span className="text-xs text-gray-400">
-                          {latestPurchase.vehicle?.jenis_mobil} - {formatCurrency(latestPurchase.harga_beli)}
-                        </span>
-                        <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                          <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4">
-                            {latestPurchase.tukar_tambah ? 'Tukar Tambah' : 'Non-TT'}
+                return (
+                  <tr key={customer.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3">
+                      <Link
+                        href={href}
+                        className="font-medium text-gray-900 hover:text-red-600 flex items-center gap-2"
+                      >
+                        {customer.nama}
+                        {customer.kode_customer && (
+                          <Badge variant="outline" className="text-xs">
+                            {customer.kode_customer}
                           </Badge>
-                          {latestPurchase.lokasi_cabang && (
-                            <span className="text-[10px] text-gray-500 bg-gray-100 rounded px-1.5 py-0.5">
-                              📍 {latestPurchase.lokasi_cabang}
+                        )}
+                        {customer.is_agen && (
+                          <Badge variant="secondary" className="text-xs">
+                            Agen
+                          </Badge>
+                        )}
+                      </Link>
+                      {customer.catatan_umum && (
+                        <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
+                          {customer.catatan_umum}
+                        </p>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="text-gray-700">{customer.nomor_telp}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      {vehicleCount > 0 ? (
+                        <div className="flex flex-col gap-1">
+                          <span className="text-gray-700 font-medium">{vehicleCount} kendaraan</span>
+                          {customer.vehicles?.[0] && (
+                            <span className="text-xs text-gray-400">
+                              {customer.vehicles[0].jenis_mobil}
+                              {customer.vehicles[0].plat_nomor && ` - ${customer.vehicles[0].plat_nomor}`}
+                              {vehicleCount > 1 && ` +${vehicleCount - 1} lainnya`}
                             </span>
                           )}
                         </div>
-                        {totalPurchases > 1 && (
-                          <span className="text-xs text-gray-400 mt-0.5">
-                            Total {totalPurchases} pembelian
+                      ) : (
+                        <span className="text-gray-400 text-xs">Belum ada</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {latestPurchase ? (
+                        <div className="flex flex-col gap-1">
+                          <span className="text-gray-700 font-medium">
+                            {latestPurchase.merek_aki} {latestPurchase.tipe_aki}
                           </span>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="text-gray-400 text-xs">Belum ada</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {latestPurchase ? (
-                      <div className="flex flex-col gap-1">
-                        <span className="font-medium text-gray-700">
-                          {getAgeDays(latestPurchase.tanggal_pembelian)} hari
-                        </span>
-                        <span className="text-xs text-gray-400">
-                          {getAgeMonths(latestPurchase.tanggal_pembelian)} bln ({new Date(latestPurchase.tanggal_pembelian).toLocaleDateString('id-ID')})
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-gray-400 text-xs">-</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {latestPurchase ? (
-                      <div className="flex flex-col gap-1 items-start">
-                        <Badge
-                          variant={warrantyStatus === 'valid' ? 'default' : 'destructive'}
-                          className={
-                            warrantyStatus === 'valid'
-                              ? 'bg-green-100 text-green-700 text-xs'
-                              : 'bg-red-100 text-red-700 text-xs'
-                          }
+                          <span className="text-xs text-gray-400">
+                            {latestPurchase.vehicle?.jenis_mobil} - {formatCurrency(latestPurchase.harga_beli)}
+                          </span>
+                          <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                            <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4">
+                              {latestPurchase.tukar_tambah ? 'Tukar Tambah' : 'Non-TT'}
+                            </Badge>
+                            {latestPurchase.lokasi_cabang && (
+                              <span className="text-[10px] text-gray-500 bg-gray-100 rounded px-1.5 py-0.5">
+                                📍 {latestPurchase.lokasi_cabang}
+                              </span>
+                            )}
+                          </div>
+                          {totalPurchases > 1 && (
+                            <span className="text-xs text-gray-400 mt-0.5">
+                              Total {totalPurchases} pembelian
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-xs">Belum ada</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {latestPurchase ? (
+                        <div className="flex flex-col gap-1">
+                          <span className="font-medium text-gray-700">
+                            {getAgeDays(latestPurchase.tanggal_pembelian)} hari
+                          </span>
+                          <span className="text-xs text-gray-400">
+                            {getAgeMonths(latestPurchase.tanggal_pembelian)} bln ({new Date(latestPurchase.tanggal_pembelian).toLocaleDateString('id-ID')})
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-xs">-</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {latestPurchase ? (
+                        <div className="flex flex-col gap-1 items-start">
+                          <Badge
+                            variant={warrantyStatus === 'valid' ? 'default' : 'destructive'}
+                            className={
+                              warrantyStatus === 'valid'
+                                ? 'bg-green-100 text-green-700 text-xs'
+                                : 'bg-red-100 text-red-700 text-xs'
+                            }
+                          >
+                            {warrantyStatus === 'valid' ? 'VALID' : 'EXPIRED'}
+                          </Badge>
+                          <span className="text-xs text-gray-400">
+                            {latestPurchase.durasi_garansi_bulan} bulan
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-xs">-</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setActiveInvoice({ customer, purchase: latestPurchase })}
+                          className="p-1.5 rounded-lg text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
+                          title="Kirim Invoice WhatsApp"
                         >
-                          {warrantyStatus === 'valid' ? 'VALID' : 'EXPIRED'}
-                        </Badge>
-                        <span className="text-xs text-gray-400">
-                          {latestPurchase.durasi_garansi_bulan} bulan
-                        </span>
+                          <MessageCircle size={17} />
+                        </button>
+                        <Link
+                          href={href}
+                          className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                          title="Lihat Detail"
+                        >
+                          <Eye size={17} />
+                        </Link>
                       </div>
-                    ) : (
-                      <span className="text-gray-400 text-xs">-</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-1">
-                      <Link
-                        href={href}
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                        title="Lihat Detail"
-                      >
-                        <Eye size={16} />
-                      </Link>
-                    </div>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={handlePageChange}
+          itemLabel="customer"
+        />
       </div>
 
-      {/* Pagination */}
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={customers.length}
-        pageSize={PAGE_SIZE}
-        onPageChange={setCurrentPage}
-        itemLabel="customer"
-      />
-    </div>
+      {/* Invoice WA Modal */}
+      {activeInvoice && (
+        <WAInvoiceModal
+          customer={{
+            id: activeInvoice.customer.id,
+            nama: activeInvoice.customer.nama,
+            nomor_telp: activeInvoice.customer.nomor_telp,
+            kode_customer: activeInvoice.customer.kode_customer,
+          }}
+          purchase={activeInvoice.purchase || null}
+          currentUserId={currentUserId}
+          onClose={() => setActiveInvoice(null)}
+        />
+      )}
+    </>
   )
 }

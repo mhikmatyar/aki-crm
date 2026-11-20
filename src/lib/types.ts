@@ -1,3 +1,5 @@
+import vehicleBrandGroups from './vehicle-brands.json'
+
 export interface Customer {
   id: string
   nama: string
@@ -215,3 +217,7 @@ export const PURCHASE_AGE_LABELS: Record<PurchaseAgeFilter, string> = {
   '12-18': '12-18 bulan',
   '>18': 'Lebih dari 18 bulan',
 }
+
+// Sumber tunggal daftar merek: dipakai form kendaraan dan scripts/cleanse-brands.js
+export const VEHICLE_BRAND_GROUPS: ReadonlyArray<{ group: string; brands: ReadonlyArray<string> }> =
+  vehicleBrandGroups

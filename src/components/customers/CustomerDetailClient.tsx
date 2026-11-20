@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft, ShieldAlert, Phone, User, Briefcase } from 'lucide-react'
+import { ChevronLeft, ShieldAlert, Phone, User, Briefcase, MessageCircle } from 'lucide-react'
 import { VehicleList } from '@/components/vehicle'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import type { CustomerWithVehicles } from '@/lib/types'
 import { getWarrantyStatus } from '@/lib/utils'
+import WAInvoiceModal from './WAInvoiceModal'
 
 interface CustomerDetailClientProps {
   customerId: string
@@ -28,6 +29,7 @@ export function CustomerDetailClient({
   const [customer, setCustomer] = useState<CustomerWithVehicles | null>(initialData || null)
   const [isLoading, setIsLoading] = useState(!initialData)
   const [error, setError] = useState<string | null>(null)
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false)
 
   const fetchCustomer = async () => {
     try {
@@ -129,6 +131,15 @@ export function CustomerDetailClient({
           </div>
           
           <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              type="button"
+              onClick={() => setShowInvoiceModal(true)}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5"
+              size="sm"
+            >
+              <MessageCircle size={15} />
+              Kirim Invoice WhatsApp
+            </Button>
             {isSuperAdmin && (
               <Button variant="destructive" onClick={handleDelete} size="sm">
                 Hapus Customer
@@ -277,6 +288,26 @@ export function CustomerDetailClient({
           </CardContent>
         </Card>
       </div>
+
+      {showInvoiceModal && customer && (() => {
+        const latestPurchase = customer.vehicles?.flatMap((v) =>
+          (v.purchases || []).map((p) => ({ ...p, vehicle: v }))
+        ).sort((a, b) => new Date(b.tanggal_pembelian).getTime() - new Date(a.tanggal_pembelian).getTime())[0]
+
+        return (
+          <WAInvoiceModal
+            customer={{
+              id: customer.id,
+              nama: customer.nama,
+              nomor_telp: customer.nomor_telp,
+              kode_customer: (customer as any).kode_customer,
+            }}
+            purchase={latestPurchase || null}
+            currentUserId={currentUserId}
+            onClose={() => setShowInvoiceModal(false)}
+          />
+        )
+      })()}
     </div>
   )
 }

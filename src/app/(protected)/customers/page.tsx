@@ -2,62 +2,52 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Plus, Search } from 'lucide-react'
 import CustomerProfileList from '@/components/customers/CustomerProfileList'
+import ExportExcelButton from '@/components/customers/ExportExcelButton'
 
 export const dynamic = 'force-dynamic'
 
 interface PageProps {
-  searchParams: { search?: string; age?: string; sort?: string }
-}
-
-function getPurchaseAgeMonths(date: string) {
-  const now = new Date()
-  const purchaseDate = new Date(date)
-
-  return (
-    (now.getFullYear() - purchaseDate.getFullYear()) * 12 +
-    (now.getMonth() - purchaseDate.getMonth())
-  )
-}
-
-function matchesAgeFilter(months: number, filter?: string) {
-  switch (filter) {
-    case '<3':
-      return months < 3
-    case '3-6':
-      return months >= 3 && months < 6
-    case '6-12':
-      return months >= 6 && months < 12
-    case '12-18':
-      return months >= 12 && months < 18
-    case '>18':
-      return months >= 18
-    default:
-      return true
-  }
-}
-
-function getLatestPurchaseDate(customer: any) {
-  const dates = customer.vehicles?.flatMap((vehicle: any) =>
-    (vehicle.vehicle_purchases || []).map((purchase: any) =>
-      new Date(purchase.tanggal_pembelian).getTime()
-    )
-  ) || []
-
-  return dates.length > 0
-    ? Math.max(...dates)
-    : customer.created_at
-      ? new Date(customer.created_at).getTime()
-      : 0
+  searchParams: { search?: string; age?: string; sort?: string; page?: string }
 }
 
 export default async function CustomersPage({ searchParams }: PageProps) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: currentProfile } = user
+    ? await supabase.from('user_profiles').select('role').eq('id', user.id).single()
+    : { data: null }
+  const canExport = ['super_admin', 'owner'].includes(currentProfile?.role)
 
+  const parsedPage = parseInt(searchParams.page || '1', 10)
+  const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1
+  const pageSize = 20
+
+  const searchTerm = (searchParams.search || '').trim()
+  const ageFilter = searchParams.age || 'all'
+  const sort = searchParams.sort || 'newest'
+
+  // Search, filter usia, sort, dan pagination dikerjakan di database
+  // (lihat migration 009 → search_customer_page). Halaman ini hanya
+  // menerima 20 ID untuk halaman aktif + total hasil.
   let customers: any[] = []
-  let from = 0
-  const step = 1000
+  let totalCount = 0
 
-  while (true) {
+  const { data: pageResult, error: searchError } = await supabase.rpc('search_customer_page', {
+    p_search: searchTerm || null,
+    p_age: ageFilter,
+    p_sort: sort,
+    p_limit: pageSize,
+    p_offset: (page - 1) * pageSize,
+  })
+
+  if (searchError) {
+    console.error('Error searching customers:', searchError)
+  }
+
+  const pageIds: string[] = (pageResult as { ids?: string[] } | null)?.ids || []
+  totalCount = Number((pageResult as { total?: number } | null)?.total || 0)
+
+  if (pageIds.length > 0) {
     const { data, error } = await supabase
       .from('customer_profiles')
       .select(`
@@ -67,68 +57,16 @@ export default async function CustomersPage({ searchParams }: PageProps) {
           vehicle_purchases (*)
         )
       `)
-      .order('created_at', { ascending: false })
-      .range(from, from + step - 1)
+      .in('id', pageIds)
 
     if (error) {
-      console.error('Error fetching customers:', error)
-      break
+      console.error('Error fetching paginated customers:', error)
     }
 
-    if (data && data.length > 0) {
-      customers.push(...data)
-    }
-
-    if (!data || data.length < step) {
-      break
-    }
-
-    from += step
+    // .in() tidak menjamin urutan, kembalikan ke urutan hasil RPC
+    const byId = new Map((data || []).map((c: any) => [c.id, c]))
+    customers = pageIds.map((id) => byId.get(id)).filter(Boolean)
   }
-
-  let filtered = customers || []
-
-  if (searchParams.search) {
-    const q = searchParams.search.toLowerCase()
-    filtered = filtered.filter((customer: any) =>
-      customer.nama?.toLowerCase().includes(q) ||
-      customer.nomor_telp?.includes(q) ||
-      customer.kode_customer?.toLowerCase().includes(q) ||
-      customer.vehicles?.some((vehicle: any) =>
-        vehicle.jenis_mobil?.toLowerCase().includes(q) ||
-        vehicle.plat_nomor?.toLowerCase().includes(q) ||
-        vehicle.vehicle_purchases?.some((purchase: any) =>
-          purchase.merek_aki?.toLowerCase().includes(q) ||
-          purchase.tipe_aki?.toLowerCase().includes(q)
-        )
-      )
-    )
-  }
-
-  if (searchParams.age && searchParams.age !== 'all') {
-    filtered = filtered.filter((customer: any) =>
-      customer.vehicles?.some((vehicle: any) =>
-        vehicle.vehicle_purchases?.some((purchase: any) =>
-          matchesAgeFilter(getPurchaseAgeMonths(purchase.tanggal_pembelian), searchParams.age)
-        )
-      )
-    )
-  }
-
-  filtered = [...filtered].sort((a: any, b: any) => {
-    const latestA = getLatestPurchaseDate(a)
-    const latestB = getLatestPurchaseDate(b)
-
-    switch (searchParams.sort) {
-      case 'oldest':
-        return latestA - latestB
-      case 'name':
-        return a.nama.localeCompare(b.nama)
-      case 'newest':
-      default:
-        return latestB - latestA
-    }
-  })
 
   const ageFilters = [
     { value: 'all', label: 'Semua' },
@@ -148,18 +86,21 @@ export default async function CustomersPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Database Customer</h1>
-          <p className="text-gray-500 text-sm mt-1">{filtered.length} customer ditemukan</p>
+          <p className="text-gray-500 text-sm mt-1">{totalCount} customer ditemukan</p>
         </div>
-        <Link
-          href="/customers/new"
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
-        >
-          <Plus size={16} />
-          Tambah Customer
-        </Link>
+        <div className="flex items-center gap-2.5">
+          {canExport && <ExportExcelButton />}
+          <Link
+            href="/customers/new"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-xs"
+          >
+            <Plus size={16} />
+            Tambah Customer
+          </Link>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 p-4">
@@ -224,7 +165,19 @@ export default async function CustomersPage({ searchParams }: PageProps) {
         </div>
       </div>
 
-      <CustomerProfileList customers={filtered} />
+      {searchError && (
+        <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+          Gagal memuat data customer. Pastikan migration 009 sudah dijalankan di Supabase.
+        </div>
+      )}
+
+      <CustomerProfileList
+        customers={customers}
+        totalCount={totalCount}
+        currentPage={page}
+        pageSize={pageSize}
+        currentUserId={user?.id || ''}
+      />
     </div>
   )
 }

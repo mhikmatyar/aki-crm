@@ -305,6 +305,31 @@ export function DashboardClient({ currentUserId }: DashboardClientProps) {
           <h1 className="text-2xl font-bold text-gray-900">Dashboard Follow-Up</h1>
           <p className="text-gray-500 text-sm mt-1">Memuat data follow-up...</p>
         </div>
+
+        {/* Skeleton Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Card key={i} className="bg-white border-gray-200">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div className="space-y-2">
+                  <div className="h-3 w-20 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-7 w-12 bg-gray-200 rounded animate-pulse" />
+                </div>
+                <div className="w-10 h-10 bg-gray-100 rounded-lg animate-pulse" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Skeleton Table */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+          <div className="h-8 bg-gray-100 rounded w-1/3 animate-pulse" />
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((row) => (
+              <div key={row} className="h-12 bg-gray-50 rounded animate-pulse" />
+            ))}
+          </div>
+        </div>
       </div>
     )
   }

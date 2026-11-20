@@ -1,0 +1,56 @@
+[
+  {
+    "group": "Mobil",
+    "brands": [
+      "TOYOTA",
+      "HONDA",
+      "MITSUBISHI",
+      "DAIHATSU",
+      "SUZUKI",
+      "NISSAN",
+      "HYUNDAI",
+      "WULING",
+      "MAZDA",
+      "ISUZU",
+      "HINO",
+      "CHEVROLET",
+      "FORD",
+      "MERCEDES-BENZ",
+      "BMW",
+      "MINI",
+      "KIA",
+      "DATSUN",
+      "MG",
+      "CHERY",
+      "BYD",
+      "VOLVO",
+      "PEUGEOT",
+      "LEXUS",
+      "TIMOR",
+      "VW",
+      "DFSK"
+    ]
+  },
+  {
+    "group": "Sepeda Motor",
+    "brands": [
+      "HONDA (Motor)",
+      "YAMAHA (Motor)",
+      "KAWASAKI (Motor)",
+      "VESPA (Motor)",
+      "QJ MOTOR",
+      "MOTOR LISTRIK",
+      "MOTOR (Lainnya)"
+    ]
+  },
+  {
+    "group": "Non-Kendaraan / Khusus",
+    "brands": [
+      "GENSET / BATERAI",
+      "ALAT BERAT / INDUSTRI",
+      "KAPAL / MARINE",
+      "MAINAN / HOBI",
+      "LAINNYA"
+    ]
+  }
+]

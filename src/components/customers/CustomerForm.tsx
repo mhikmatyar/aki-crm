@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { customerHref } from '@/lib/customer-code'
+import { VEHICLE_BRAND_GROUPS } from '@/lib/types'
 
 interface CustomerFormProps {
   userId: string
@@ -29,6 +30,7 @@ export default function CustomerForm({ userId }: CustomerFormProps) {
     plat_nomor: '',
     jenis_mobil: '',
     merek_mobil: '',
+    custom_merek_mobil: '',
     merek_aki: '',
     tipe_aki: '',
     harga_beli: '',
@@ -88,11 +90,16 @@ export default function CustomerForm({ userId }: CustomerFormProps) {
         detail_agen: form.is_agen ? form.detail_agen.trim() || undefined : undefined,
       })
 
+      const finalMerekMobil =
+        form.merek_mobil === '__CUSTOM__'
+          ? form.custom_merek_mobil.trim()
+          : form.merek_mobil.trim()
+
       const vehicle = await postJson('/api/vehicles', {
         customer_id: customer.id,
         plat_nomor: form.plat_nomor.trim() || undefined,
         jenis_mobil: form.jenis_mobil.trim(),
-        merek_mobil: form.merek_mobil.trim() || undefined,
+        merek_mobil: finalMerekMobil || undefined,
       })
 
       await postJson('/api/vehicle-purchases', {
@@ -240,15 +247,43 @@ export default function CustomerForm({ userId }: CustomerFormProps) {
           </div>
 
           <div>
-            <label className={labelClass}>Merek Mobil</label>
-            <input
-              type="text"
+            <label className={labelClass}>
+              Merek Kendaraan / Mobil <span className="text-red-500">*</span>
+            </label>
+            <select
               name="merek_mobil"
               value={form.merek_mobil}
               onChange={handleChange}
-              placeholder="Toyota"
+              required
               className={fieldClass}
-            />
+            >
+              <option value="">-- Pilih Merek --</option>
+              {VEHICLE_BRAND_GROUPS.map((group) => (
+                <optgroup key={group.group} label={group.group}>
+                  {group.brands.map((brand) => (
+                    <option key={brand} value={brand}>
+                      {brand}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+              <option value="__CUSTOM__">➕ Input Merek Sendiri (Manual)...</option>
+            </select>
+
+            {form.merek_mobil === '__CUSTOM__' && (
+              <div className="mt-2.5">
+                <input
+                  type="text"
+                  name="custom_merek_mobil"
+                  value={form.custom_merek_mobil}
+                  onChange={handleChange}
+                  required
+                  placeholder="Ketik nama merek kendaraan di sini..."
+                  className={fieldClass}
+                  autoFocus
+                />
+              </div>
+            )}
           </div>
         </div>
       </section>

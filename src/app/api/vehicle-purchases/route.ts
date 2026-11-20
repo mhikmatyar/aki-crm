@@ -27,11 +27,11 @@ export async function GET(request: Request) {
       }
     }
 
-    let allPurchases: any[] = []
-    let from = 0
-    const step = 1000
+    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!, 10) : null
 
-    while (true) {
+    let allPurchases: any[] = []
+
+    if (limit) {
       let pageQuery = supabase
         .from('vehicle_purchases')
         .select(`
@@ -51,7 +51,7 @@ export async function GET(request: Request) {
           )
         `)
         .order('tanggal_pembelian', { ascending: false })
-        .range(from, from + step - 1)
+        .limit(limit)
 
       if (vehicleId) {
         pageQuery = pageQuery.eq('vehicle_id', vehicleId)
@@ -62,7 +62,6 @@ export async function GET(request: Request) {
       }
 
       const { data: pageData, error: pageError } = await pageQuery
-
       if (pageError) {
         console.error('Error fetching purchases:', pageError)
         return NextResponse.json(
@@ -70,41 +69,119 @@ export async function GET(request: Request) {
           { status: 500 }
         )
       }
+      allPurchases = pageData || []
+    } else {
+      let from = 0
+      const step = 1000
 
-      if (pageData && pageData.length > 0) {
-        allPurchases.push(...pageData)
+      while (true) {
+        let pageQuery = supabase
+          .from('vehicle_purchases')
+          .select(`
+            *,
+            vehicle:vehicles!vehicle_purchases_vehicle_id_fkey (
+              id,
+              plat_nomor,
+              jenis_mobil,
+              merek_mobil,
+              customer_profile:customer_profiles!vehicles_customer_id_fkey (
+                id,
+                nama,
+                nomor_telp,
+                catatan_umum,
+                is_agen
+              )
+            )
+          `)
+          .order('tanggal_pembelian', { ascending: false })
+          .range(from, from + step - 1)
+
+        if (vehicleId) {
+          pageQuery = pageQuery.eq('vehicle_id', vehicleId)
+        }
+
+        if (customerId && vehicleIds.length > 0) {
+          pageQuery = pageQuery.in('vehicle_id', vehicleIds)
+        }
+
+        const { data: pageData, error: pageError } = await pageQuery
+
+        if (pageError) {
+          console.error('Error fetching purchases:', pageError)
+          return NextResponse.json(
+            { error: 'Failed to fetch purchases' },
+            { status: 500 }
+          )
+        }
+
+        if (pageData && pageData.length > 0) {
+          allPurchases.push(...pageData)
+        }
+
+        if (!pageData || pageData.length < step || vehicleId || (customerId && vehicleIds.length < step)) {
+          break
+        }
+
+        from += step
       }
-
-      if (!pageData || pageData.length < step || vehicleId || (customerId && vehicleIds.length < step)) {
-        break
-      }
-
-      from += step
     }
 
     const data = allPurchases
-    const purchaseIds = (data || []).map((purchase: any) => purchase.id)
     let logsByPurchase: Record<string, any[]> = {}
 
-    if (purchaseIds.length > 0) {
-      const chunkSize = 500
-      for (let i = 0; i < purchaseIds.length; i += chunkSize) {
-        const chunk = purchaseIds.slice(i, i + chunkSize)
-        const { data: logs, error: logsError } = await supabase
-          .from('wa_logs')
-          .select('id, vehicle_purchase_id, customer_id, durasi_saat_kirim, pesan_dikirim, waktu_kirim')
-          .in('vehicle_purchase_id', chunk)
-          .order('waktu_kirim', { ascending: false })
+    if (data.length > 0) {
+      const purchaseIds: string[] = data.map((purchase: any) => purchase.id)
+      const purchaseIdSet = new Set(purchaseIds)
+      const LOG_COLUMNS = 'id, vehicle_purchase_id, customer_id, durasi_saat_kirim, pesan_dikirim, waktu_kirim'
+      const LOG_PAGE = 1000
 
-        if (!logsError && logs) {
-          logs.forEach((log: any) => {
-            if (!log.vehicle_purchase_id) return
-            logsByPurchase[log.vehicle_purchase_id] = logsByPurchase[log.vehicle_purchase_id] || []
-            logsByPurchase[log.vehicle_purchase_id].push(log)
-          })
-        } else if (logsError) {
-          console.warn('WA logs relation not ready, continuing without logs:', logsError.message)
+      // Supabase membatasi 1000 baris per request, jadi setiap query log dipaginasi
+      // sampai habis supaya log lama tidak hilang diam-diam.
+      const fetchAllPages = async (buildQuery: () => any) => {
+        const rows: any[] = []
+        for (let offset = 0; ; offset += LOG_PAGE) {
+          const { data: page, error } = await buildQuery()
+            .order('waktu_kirim', { ascending: false })
+            .order('id', { ascending: true })
+            .range(offset, offset + LOG_PAGE - 1)
+          if (error) throw error
+          if (page) rows.push(...page)
+          if (!page || page.length < LOG_PAGE) break
         }
+        return rows
+      }
+
+      try {
+        let logs: any[] = []
+        if (purchaseIds.length <= 1000) {
+          // Sedikit purchase: ambil log hanya untuk purchase ini, per potongan ID agar URL tidak kepanjangan
+          const chunkSize = 200
+          for (let i = 0; i < purchaseIds.length; i += chunkSize) {
+            const chunk = purchaseIds.slice(i, i + chunkSize)
+            logs.push(
+              ...(await fetchAllPages(() =>
+                supabase.from('wa_logs').select(LOG_COLUMNS).in('vehicle_purchase_id', chunk)
+              ))
+            )
+          }
+        } else {
+          // Banyak purchase (mis. dashboard): lebih murah ambil semua log yang punya purchase, lalu saring
+          logs = await fetchAllPages(() =>
+            supabase.from('wa_logs').select(LOG_COLUMNS).not('vehicle_purchase_id', 'is', null)
+          )
+        }
+
+        logs.forEach((log: any) => {
+          if (!log.vehicle_purchase_id || !purchaseIdSet.has(log.vehicle_purchase_id)) return
+          logsByPurchase[log.vehicle_purchase_id] = logsByPurchase[log.vehicle_purchase_id] || []
+          logsByPurchase[log.vehicle_purchase_id].push(log)
+        })
+        // Urutan antar-chunk bisa tercampur; pastikan terbaru dulu per purchase
+        Object.values(logsByPurchase).forEach((list) =>
+          list.sort((a, b) => new Date(b.waktu_kirim).getTime() - new Date(a.waktu_kirim).getTime())
+        )
+      } catch (logsError: any) {
+        console.warn('WA logs query error, continuing without logs:', logsError?.message)
       }
     }
 

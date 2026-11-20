@@ -134,5 +134,72 @@ export function buildWALink(nomorTelp: string, pesan: string): string {
     : cleanNumber.startsWith('62')
     ? cleanNumber
     : '62' + cleanNumber
-  return `https://wa.me/${numberWithCountryCode}?text=${encodeURIComponent(pesan)}`
+  // Jangan pakai wa.me: redirect-nya mengganti setiap emoji di parameter text
+  // dengan karakter "�" (%EF%BF%BD). api.whatsapp.com/send dipakai langsung tanpa redirect.
+  return `https://api.whatsapp.com/send?phone=${numberWithCountryCode}&text=${encodeURIComponent(pesan)}`
+}
+
+export function buildInvoiceWAMessage(params: {
+  nama: string
+  kodeCustomer?: string | null
+  jenisMobil?: string | null
+  platNomor?: string | null
+  merekAki?: string | null
+  tipeAki?: string | null
+  hargaBeli?: number | null
+  tanggalPembelian?: string | null
+  durasiGaransiBulan?: number | null
+  tukarTambah?: boolean | null
+  lokasiCabang?: string | null
+  namaToko?: string
+}): string {
+  const {
+    nama,
+    kodeCustomer,
+    jenisMobil,
+    platNomor,
+    merekAki,
+    tipeAki,
+    hargaBeli,
+    tanggalPembelian,
+    durasiGaransiBulan = 12,
+    tukarTambah,
+    lokasiCabang,
+    namaToko = 'Pusat Aki',
+  } = params
+
+  const tanggalStr = formatDate(tanggalPembelian)
+  let garansiSampaiStr = '-'
+  if (tanggalPembelian && durasiGaransiBulan) {
+    try {
+      garansiSampaiStr = formatDate(addMonths(parseISO(tanggalPembelian), durasiGaransiBulan).toISOString())
+    } catch {
+      garansiSampaiStr = '-'
+    }
+  }
+
+  const hargaStr = typeof hargaBeli === 'number' && hargaBeli > 0 ? formatCurrency(hargaBeli) : '-'
+  const kendaraanStr = [jenisMobil, platNomor ? `(${platNomor})` : ''].filter(Boolean).join(' ') || '-'
+  const akiStr = [merekAki, tipeAki].filter(Boolean).join(' ') || '-'
+
+  return `*INVOICE & KARTU GARANSI ELEKTRONIK*
+*${namaToko.toUpperCase()}*
+----------------------------------------
+Halo Kak *${nama}*, terima kasih telah berbelanja di *${namaToko}*! 🙏
+
+Berikut bukti transaksi & rincian garansi aki Anda:
+${kodeCustomer ? `📄 *ID Customer*: ${kodeCustomer}\n` : ''}📅 *Tanggal Transaksi*: ${tanggalStr}
+${lokasiCabang ? `📍 *Cabang*: ${lokasiCabang}\n` : ''}🚗 *Kendaraan*: ${kendaraanStr}
+🔋 *Aki*: *${akiStr}*
+💰 *Total Harga*: ${hargaStr}
+🔄 *Tukar Tambah*: ${tukarTambah ? 'Ya' : 'Non Tukar-Tambah'}
+
+🛡️ *Masa Garansi*: *${durasiGaransiBulan} Bulan* (s.d. ${garansiSampaiStr})
+----------------------------------------
+*Catatan Garansi*:
+1. Harap simpan pesan WhatsApp ini sebagai bukti garansi yang sah.
+2. Dapatkan layanan gratis cek aki berkala di toko kami untuk memastikan kondisi aki dan sistem kelistrikan kendaraan selalu optimal.
+
+Jika ada pertanyaan atau kendala, silakan hubungi kami kembali.
+Semoga kendaraannya selalu lancar dan prima di jalan! Terima kasih. 😊🔋`
 }
